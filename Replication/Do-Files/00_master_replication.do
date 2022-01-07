@@ -41,7 +41,7 @@ cap ssc install asgen
 *--					Directories					--*
 *-------------------------------------------------*
 
-global main "/Users/benediktfranz/OneDrive - bwedu/Studium/Master/MasterThesis/Replication" // Global to define main location
+global main "/Users/benediktfranz/OneDrive - bwedu/Studium/Master/MasterThesis/Empirical Analysis/Replication" // Global to define main location
 cd "$main"
 global data_in "$main/Data Input"
 global data_out "$main/Data Output"

@@ -175,36 +175,36 @@ save "$intermediate/01_prices_germany_daily.dta", replace
 
 *-----				1.1.2 Tankerkönig Stations (Germany)				  -----*
 
-* December
+* June
 forvalues ii=15/30{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/06 Stations/2020-06-`i'-stations.csv", varnames(1) clear
+	import delimited "$data_in/06 Stations/2020-06-`i'-stations.csv", varnames(1) encoding("utf-8") clear
 	
-	gen date="2020-06-`i'"
+	gen date = date("2020-06-`i'", "YMD")
 	rename uuid id
 	
-	drop openingtimes_json
+	drop openingtimes_json first_active
 	
 	save "$source/Stations_Germany/2020-06-`i'-stations.dta", replace
 }
 
 
-* January
+* July
 forvalues ii=01/31{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/01 Stations/2020-07-`i'-stations.csv", varnames(1) clear
+	import delimited "$data_in/07 Stations/2020-07-`i'-stations.csv", varnames(1) encoding("utf-8") clear
 	
-	gen date="2021-01-`i'"
+	gen date = date("2020-07-`i'", "YMD")
 	rename uuid id
 	
-	drop openingtimes_json
+	drop openingtimes_json first_active
 	
-	save "2020-07-`i'-stations.dta", replace
+	save "$source/Stations_Germany/2020-07-`i'-stations.dta", replace
 }
 
 
 * Apend Data
-use "$source/Stations_Germany/2020-06-15-stations.dta", replace
+use "$source/Stations_Germany/2020-06-15-stations.dta", clear
 forvalues mm = 16/30 {
 	local m : di %02.0f `mm'	
 	append using "$source/Stations_Germany/2020-06-`m'-stations.dta"
@@ -214,7 +214,7 @@ forvalues oo = 01/31{
 	cap append using "$source/Stations_Germany/2020-07-`o'-stations.dta"
 }
 
-save "$data_out/02_stations_germany.dta", replace
+save "$intermediate/02_stations_germany.dta", replace
 
 
 
