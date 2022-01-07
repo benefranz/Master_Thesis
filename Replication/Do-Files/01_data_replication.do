@@ -17,7 +17,7 @@ Changes:
 * June
 forvalues ii=15/30{
 	local i : di %02.0f `ii'	
-	import delimited "$data_in/06 Prices_Germany/2020-06-`i'-prices.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/06 Prices/2020-06-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
 	rename station_uuid id
 	
@@ -27,7 +27,7 @@ forvalues ii=15/30{
 * July
 forvalues ii=01/31{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/07 Prices_Germany/2020-07-`i'-prices.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/07 Prices/2020-07-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
 	rename station_uuid id
 	
