@@ -1,10 +1,6 @@
 *------------------------------------------------------------------------------*
 *-----						   		1. DATA								  -----*
 *------------------------------------------------------------------------------*
-/*
-Changes:
-	- consistent file names
-*/
 
 
 
@@ -12,7 +8,40 @@ Changes:
 *----					1.1 Data Download and Reshaping					  -----*
 *------------------------------------------------------------------------------*
 
-*-----					1.1.1 Tankerkönig Prices (Germany)				  -----*
+*-----				1.1.1 Tankerkönig Stations (Germany)				  -----*
+
+* June
+forvalues ii=15/30{
+	local i : di %02.0f `ii'
+	import delimited "$data_in/06 Stations/2020-06-`i'-stations.csv", varnames(1) encoding("utf-8") clear
+	
+	gen date = date("2020-06-`i'", "YMD")
+	rename uuid id
+	rename post_code postal
+	
+	drop openingtimes_json first_active name brand street house_number city
+	
+	save "$source/Stations_Germany/2020-06-`i'-stations.dta", replace
+}
+
+
+* July
+forvalues ii=01/31{
+	local i : di %02.0f `ii'
+	import delimited "$data_in/07 Stations/2020-07-`i'-stations.csv", varnames(1) encoding("utf-8") clear
+	
+	gen date = date("2020-07-`i'", "YMD")
+	rename uuid id
+	rename post_code postal
+	
+	drop openingtimes_json first_active name brand street house_number city
+	
+	save "$source/Stations_Germany/2020-07-`i'-stations.dta", replace
+}
+
+
+
+*-----					1.1.2 Tankerkönig Prices (Germany)				  -----*
 
 * June
 forvalues ii=15/30{
@@ -20,6 +49,14 @@ forvalues ii=15/30{
 	import delimited "$data_in/06 Prices/2020-06-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
 	rename station_uuid id
+	
+	gen double time = clock(date, "YMDhms#")
+	format time %tcDD_Mon_CCYY_HH:MM:SS
+	drop date dieselchange e5change e10change
+
+	gen date = dofc(time)
+	gen hour = hh(time)
+	gen datehour = date*24 + hour
 	
 	save "$source/Prices_Germany/2020-06-`i'-prices.dta", replace
 }
@@ -31,28 +68,58 @@ forvalues ii=01/31{
 	
 	rename station_uuid id
 	
+	gen double time = clock(date, "YMDhms#")
+	format time %tcDD_Mon_CCYY_HH:MM:SS
+	drop date dieselchange e5change e10change
+
+	gen date = dofc(time)
+	gen hour = hh(time)
+	gen datehour = date*24 + hour
+	
 	save "$source/Prices_Germany/2020-07-`i'-prices.dta", replace
 }
 
+* Merge prices with information stations (June)
+forvalues ii=15/30{
+	local i : di %02.0f `ii'
+	use "$source/Prices_Germany/2020-06-`i'-prices.dta", clear
+	
+	merge m:1 id date using "$source/Stations_Germany/2020-06-`i'-stations.dta"
+	
+	keep if _merge == 3
+	drop _merge
+	
+	save "$source/Merged_Germany/2020-06-`i'-merged.dta", replace
+}
+
+* Merge prices with information stations (July)
+forvalues ii=01/31{
+	local i : di %02.0f `ii'
+	use "$source/Prices_Germany/2020-07-`i'-prices.dta", clear
+	
+	merge m:1 id date using "$source/Stations_Germany/2020-07-`i'-stations.dta"
+	
+	keep if _merge == 3
+	drop _merge
+	
+	save "$source/Merged_Germany/2020-07-`i'-merged.dta", replace
+}
+
 * Apend Data
-use "$source/Prices_Germany/2020-06-15-prices.dta", clear
+use "$source/Merged_Germany/2020-06-15-merged.dta", clear
 forvalues mm = 16/30 {
 	local m : di %02.0f `mm'	
-	append using "$source/Prices_Germany/2020-06-`m'-prices.dta"
+	append using "$source/Merged_Germany/2020-06-`m'-merged.dta"
 }
 forvalues oo = 01/31{ 
 	local o : di %02.0f `oo'	
-	cap append using "$source/Prices_Germany/2020-07-`o'-prices.dta"
+	cap append using "$source/Merged_Germany/2020-07-`o'-merged.dta"
 }
 
-* Extract time and create further temporal variables
-gen double time = clock(date, "YMDhms#")
-format time %tcDD_Mon_CCYY_HH:MM:SS
-drop date
-
-gen date = dofc(time)
-gen hour = hh(time)
-gen datehour = date*24 + hour
+* Create numeric ID based on non-numeric ID
+egen id_new = group(id)
+drop id
+rename id_new id
 
 * Replace 0 or missing values with previous prices
 foreach var of varlist diesel e5 e10 {
@@ -77,7 +144,7 @@ drop exp date hour datehour
 foreach var of varlist diesel e5 e10 {
 	bysort id time: egen `var'_mean = mean(`var')
 }
-drop diesel e5 e10 dieselchange e5change e10change
+drop diesel e5 e10
 rename diesel_mean diesel
 rename e5_mean e5
 rename e10_mean e10
@@ -91,7 +158,7 @@ gen vat = 1
 replace vat = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
 
 * Save
-save "$intermediate/01_prices_germany_hourly.dta", replace
+save "$intermediate/01_germany_hourly.dta", replace
 
 
 * Create neccessary time variables
@@ -141,7 +208,7 @@ rename e10_mean e10
 duplicates drop
 
 * Save
-save "$intermediate/01_prices_germany_weighted.dta", replace
+save "$intermediate/01_germany_weighted.dta", replace
 
 
 * Restore
@@ -164,58 +231,13 @@ rename e10_mean e10
 duplicates drop
 
 * Save
-save "$intermediate/01_prices_germany_daily.dta", replace
-
-
-
-*-----				1.1.2 Tankerkönig Stations (Germany)				  -----*
-
-* June
-forvalues ii=15/30{
-	local i : di %02.0f `ii'
-	import delimited "$data_in/06 Stations/2020-06-`i'-stations.csv", varnames(1) encoding("utf-8") clear
-	
-	gen date = date("2020-06-`i'", "YMD")
-	rename uuid id
-	
-	drop openingtimes_json first_active
-	
-	save "$source/Stations_Germany/2020-06-`i'-stations.dta", replace
-}
-
-
-* July
-forvalues ii=01/31{
-	local i : di %02.0f `ii'
-	import delimited "$data_in/07 Stations/2020-07-`i'-stations.csv", varnames(1) encoding("utf-8") clear
-	
-	gen date = date("2020-07-`i'", "YMD")
-	rename uuid id
-	
-	drop openingtimes_json first_active
-	
-	save "$source/Stations_Germany/2020-07-`i'-stations.dta", replace
-}
-
-
-* Apend Data
-use "$source/Stations_Germany/2020-06-15-stations.dta", clear
-forvalues mm = 16/30 {
-	local m : di %02.0f `mm'	
-	append using "$source/Stations_Germany/2020-06-`m'-stations.dta"
-}
-forvalues oo = 01/31{ 
-	local o : di %02.0f `oo'	
-	cap append using "$source/Stations_Germany/2020-07-`o'-stations.dta"
-}
-
-save "$intermediate/02_stations_germany.dta", replace
+save "$intermediate/01_germany_daily.dta", replace
 
 
 
 *-----			 	  1.1.4 Le Prix Des Carburants (France)		   		  -----*
 
-* Loading data
+* Load data
 import delimited "$data_in/PrixCarburants_annuel_2020.csv", numericcols(9) encoding("utf-8") clear
 
 * Rename variables
@@ -338,6 +360,7 @@ drop street_id name street number postal city
 save "$intermediate/04_germany_streettype.dta", replace
 
 
+
 *-----					 1.1.6 Google Mobility Reports					  -----*
 
 * Load data
@@ -441,22 +464,11 @@ save "$intermedate/05_germany_postal.dta", replace
 *----						1.2 Merge and Append						  -----*
 *------------------------------------------------------------------------------*
 
-*--					1.2.1 Merge German Prices with Stations					 --*
+*--					1.2.2 Merge German Data with Regions					 --*
 
 * Load data
-use "$intermediate/01_prices_germany", clear
+use "$interm"
 
-* Merge and Show Results
-//merge 1:1 date uuid using "$data_out/02_stations_germany"
-
-* Create numeric ID based on non-numeric ID
-egen id_new = group(id)
-drop id
-rename id_new id
-
-
-
-*--					1.2.2 Merge German Data with Regions					 --*
 
 *--					1.2.3 Merge German Data with Mobility					 --*
 
