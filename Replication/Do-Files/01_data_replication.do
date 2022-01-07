@@ -45,11 +45,6 @@ forvalues oo = 01/31{
 	cap append using "$source/Prices_Germany/2020-07-`o'-prices.dta"
 }
 
-* Create numeric ID based on non-numeric ID
-egen id_new = group(id)
-drop id
-rename id_new id
-
 * Extract time and create further temporal variables
 gen double time = clock(date, "YMDhms#")
 format time %tcDD_Mon_CCYY_HH:MM:SS
@@ -218,7 +213,7 @@ save "$intermediate/02_stations_germany.dta", replace
 
 
 
-*-----			 	  1.1.3 Le Prix Des Carburants (France)		   		  -----*
+*-----			 	  1.1.4 Le Prix Des Carburants (France)		   		  -----*
 
 * Loading data
 import delimited "$data_in/PrixCarburants_annuel_2020.csv", numericcols(9) encoding("utf-8") clear
@@ -317,11 +312,33 @@ rename e10_mean e10
 duplicates drop
 
 * Save
-save "$data_out/03_france_daily.dta", replace
+save "$intermediate/03_france_daily.dta", replace
 
 
+*-----				1.1.5 Type of Attached Street (Germany)				  -----*
 
-*-----					 1.1.3 Google Mobility Reports					  -----*
+* Load data
+import excel "$data_in/tankstellen_autobahn_bundestrasse.xls", clear 
+
+* Rename
+rename A street_id
+rename B street_type
+rename C id
+rename D name
+rename E brand
+rename F street
+rename G number
+rename H postal
+rename I city
+
+* Drop unnecessary variables
+drop street_id name street number postal city
+
+* save
+save "$intermediate/04_germany_streettype.dta", replace
+
+
+*-----					 1.1.6 Google Mobility Reports					  -----*
 
 * Load data
 foreach c in "DE" "FR"{
@@ -339,7 +356,7 @@ foreach c in "DE" "FR"{
 
 
 
-*----- 1.1.4 French postal codes to regions (sub_region_1) and deparments (sub_region_2) -----*
+*----- 1.1.7 French postal codes to regions (sub_region_1) and deparments (sub_region_2) -----*
 
 * Load data
 import delimited "https://www.data.gouv.fr/fr/datasets/r/dbe8a621-a9c4-4bc3-9cae-be1699c5ff25", encoding("utf-8") clear
@@ -357,7 +374,7 @@ save "$intermediate/04_france_postal.dta", replace
 
 
 
-*-----		 1.1.5 German postal codes to Bundesländer (sub_region_1)	  -----*
+*-----		 1.1.8 German postal codes to Bundesländer (sub_region_1)	  -----*
 
 * Load data
 import excel "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/Archiv/GVAuszugQ/BTW20213Q2021.xlsx?__blob=publicationFile", sheet("Bundestagswahlkreise_2021") cellrange(A7:L11054) encoding("utf-8") clear
@@ -426,10 +443,16 @@ save "$intermedate/05_germany_postal.dta", replace
 
 *--					1.2.1 Merge German Prices with Stations					 --*
 
+* Load data
 use "$intermediate/01_prices_germany", clear
 
 * Merge and Show Results
 //merge 1:1 date uuid using "$data_out/02_stations_germany"
+
+* Create numeric ID based on non-numeric ID
+egen id_new = group(id)
+drop id
+rename id_new id
 
 
 
