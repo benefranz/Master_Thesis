@@ -334,7 +334,7 @@ rename e10_mean e10
 duplicates drop
 
 * Save
-save "$intermediate/03_france_daily.dta", replace
+save "$intermediate/02_france_daily.dta", replace
 
 
 *-----				1.1.5 Type of Attached Street (Germany)				  -----*
@@ -357,7 +357,7 @@ rename I city
 drop street_id name street number postal city
 
 * save
-save "$intermediate/04_germany_streettype.dta", replace
+save "$intermediate/03_germany_streettype.dta", replace
 
 
 
@@ -400,7 +400,7 @@ save "$intermediate/04_france_postal.dta", replace
 *-----		 1.1.8 German postal codes to Bundesländer (sub_region_1)	  -----*
 
 * Load data
-import excel "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/Archiv/GVAuszugQ/BTW20213Q2021.xlsx?__blob=publicationFile", sheet("Bundestagswahlkreise_2021") cellrange(A7:L11054) encoding("utf-8") clear
+import excel "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/Archiv/GVAuszugQ/BTW20213Q2021.xlsx?__blob=publicationFile", sheet("Bundestagswahlkreise_2021") cellrange(A7:L11054) clear
 
 * Rename
 rename A ars
@@ -454,9 +454,11 @@ replace sub_region_1="Saxony" if bundesland_id=="14"
 replace sub_region_1="Saxony-Anhalt" if bundesland_id=="15"
 replace sub_region_1="Thuringia" if bundesland_id=="16"
 
-* Save
-save "$intermedate/05_germany_postal.dta", replace
+* Drop unnecessary variables
+drop ars ags gemeinde wahlkreis_id wahlkreis area pop pop_m pop_f bundesland_id
 
+* Save
+save "$intermediate/05_germany_postal.dta", replace
 
 
 
@@ -467,14 +469,36 @@ save "$intermedate/05_germany_postal.dta", replace
 *--					1.2.2 Merge German Data with Regions					 --*
 
 * Load data
-use "$interm"
+use "$intermediate/01_germany_weighted.dta", clear
+
+* Merge
+merge m:m postal using "$intermediate/05_germany_postal.dta"
+
 
 
 *--					1.2.3 Merge German Data with Mobility					 --*
 
+
+
+
 *--					1.2.4 Merge French  Data with Regions					 --*
 
+* Load data
+use "$intermediate/02_france_daily.dta", clear
+
+* Merge
+merge m:m postal using "$intermediate/04_france_postal.dta" //1844 not matched from master
+keep if _merge == 3
+drop _merge
+
+
 *--					1.2.5 Merge French Data with Mobility					 --*
+
+* Merge
+merge m:m sub_region_2 date using"$source/Mobility/2020_FR_Region_Mobility_Report.dta" // 32,880 not matched from master
+
+* Save
+save "$final/02_france.dta", replace
 
 *--						1.2.6 Append German and French Data					 --*
 
