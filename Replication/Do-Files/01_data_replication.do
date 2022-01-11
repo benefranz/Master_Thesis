@@ -153,7 +153,7 @@ rename e10_mean e10
 duplicates drop
 
 * Generate treatment variable
-gen treatment = 1
+gen treat = 1
 
 * Generate post variable
 gen post = 1
@@ -237,7 +237,7 @@ save "$intermediate/01_germany_daily.dta", replace
 
 
 
-*-----			 	  1.1.4 Le Prix Des Carburants (France)		   		  -----*
+*-----			 	  1.1.3 Le Prix Des Carburants (France)		   		  -----*
 
 * Load data
 import delimited "$data_in/PrixCarburants_annuel_2020.csv", numericcols(9) encoding("utf-8") clear
@@ -245,12 +245,16 @@ import delimited "$data_in/PrixCarburants_annuel_2020.csv", numericcols(9) encod
 * Rename variables
 rename v1 id
 rename v2 postal
-rename v3 street_type
 rename v4 latitude
 rename v5 longitude
 rename v7 id_fuel
 rename v8 fuel
 rename v9 price
+
+* Street Type to Dummy
+gen street_type = 0
+replace street_type = 1 if v3 == "A"
+drop v3
 
 * Format date
 gen double time = clock(v6, "YMD#hms")
@@ -312,7 +316,7 @@ rename e10_mean e10
 duplicates drop
 
 * Generate treatment variable
-gen treatment = 0
+gen treat = 0
 
 * Generate post variable
 gen post = 1
@@ -340,7 +344,7 @@ duplicates drop
 save "$intermediate/02_france_daily.dta", replace
 
 
-*-----				1.1.5 Type of Attached Street (Germany)				  -----*
+*-----				1.1.4 Type of Attached Street (Germany)				  -----*
 
 * Load data
 import excel "$data_in/tankstellen_autobahn_bundestrasse.xls", clear 
@@ -364,7 +368,7 @@ save "$intermediate/03_germany_streettype.dta", replace
 
 
 
-*-----					 1.1.6 Google Mobility Reports					  -----*
+*-----					 1.1.5 Google Mobility Reports					  -----*
 
 * Load data
 foreach c in "DE" "FR"{
@@ -382,7 +386,7 @@ foreach c in "DE" "FR"{
 
 
 
-*----- 1.1.7 French postal codes to regions (sub_region_1) and deparments (sub_region_2) -----*
+*----- 1.1.6 French postal codes to regions (sub_region_1) and deparments (sub_region_2) -----*
 
 * Load data
 import delimited "https://www.data.gouv.fr/fr/datasets/r/dbe8a621-a9c4-4bc3-9cae-be1699c5ff25", encoding("utf-8") clear
@@ -400,7 +404,7 @@ save "$intermediate/04_france_postal.dta", replace
 
 
 
-*-----		 1.1.8 German postal codes to Bundesländer (sub_region_1)	  -----*
+*-----		 1.1.7 German postal codes to Bundesländer (sub_region_1)	  -----*
 
 * Load data
 import excel "$data_in/German_Postal_Web.xlsx", firstrow clear
@@ -537,6 +541,8 @@ save "$final/final_daily"
 *------------------------------------------------------------------------------*
 
 *--							 1.3.1 Labelling								 --*
+
+* Regular Labels
 label variable id "Petrol Station ID"
 label variable date "Date"
 label variable postal "Postal Code"
@@ -545,6 +551,17 @@ label variable longitude "Longitude of the Petrol Station"
 label variable diesel "Diesel Price (weighted average for Germany)"
 label variable e5 "E5 Price (weighted average for Germany)"
 label variable e10 "E10 Price (weighted average for Germany)"
+
+* Labels with Value Label
+label variable treat "Treatment Dummy (1 for Germany)"
+label define treatl 1 "Treatment Group (Germany)" 0 "Control Group (France)"
+label values treat treatl
+label variable post "Post Reform Dummy (1 after 30.06.2020)"
+label define postl 1 "Post Reform" 0 "Before Reform"
+label values post postl
+label variable street_type "Type of Attached Street (Highway or Normal Street)"
+label define stl 1 "Highway" 0 "Normal Street"
+label values street_type stl
 
 
 ** 1.3.1 Counting stations in certain radius
