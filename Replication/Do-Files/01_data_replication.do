@@ -18,6 +18,7 @@ forvalues ii=15/30{
 	gen date = date("2020-06-`i'", "YMD")
 	rename uuid id
 	rename post_code postal
+	destring postal, replace
 	
 	drop openingtimes_json first_active name brand street house_number city
 	
@@ -33,6 +34,7 @@ forvalues ii=01/31{
 	gen date = date("2020-07-`i'", "YMD")
 	rename uuid id
 	rename post_code postal
+	destring postal, replace
 	
 	drop openingtimes_json first_active name brand street house_number city
 	
@@ -400,65 +402,56 @@ save "$intermediate/04_france_postal.dta", replace
 *-----		 1.1.8 German postal codes to Bundesländer (sub_region_1)	  -----*
 
 * Load data
-import excel "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/Archiv/GVAuszugQ/BTW20213Q2021.xlsx?__blob=publicationFile", sheet("Bundestagswahlkreise_2021") cellrange(A7:L11054) clear
-
-* Rename
-rename A ars
-rename B ags
-rename C gemeinde
-rename D wahlkreis_id
-rename E wahlkreis
-rename F postal
-rename G area
-rename H pop
-rename I pop_m
-rename J pop_f
-drop K L
+import excel "$data_in/German_Postal_Web.xlsx", firstrow clear
 
 * Generate iso_3166_2_code
-gen bundesland_id = substr(ags, 1, 2)
 gen iso_3166_2_code="DE"
-replace iso_3166_2_code="DE-SH" if bundesland_id=="01"
-replace iso_3166_2_code="DE-HH" if bundesland_id=="02"
-replace iso_3166_2_code="DE-NI" if bundesland_id=="03"
-replace iso_3166_2_code="DE-HB" if bundesland_id=="04"
-replace iso_3166_2_code="DE-NW" if bundesland_id=="05"
-replace iso_3166_2_code="DE-HE" if bundesland_id=="06"
-replace iso_3166_2_code="DE-RP" if bundesland_id=="07"
-replace iso_3166_2_code="DE-BW" if bundesland_id=="08"
-replace iso_3166_2_code="DE-BY" if bundesland_id=="09"
-replace iso_3166_2_code="DE-SL" if bundesland_id=="10"
-replace iso_3166_2_code="DE-BE" if bundesland_id=="11"
-replace iso_3166_2_code="DE-BB" if bundesland_id=="12"
-replace iso_3166_2_code="DE-MV" if bundesland_id=="13"
-replace iso_3166_2_code="DE-SN" if bundesland_id=="14"
-replace iso_3166_2_code="DE-ST" if bundesland_id=="15"
-replace iso_3166_2_code="DE-TH" if bundesland_id=="16"
+replace iso_3166_2_code="DE-SH" if Bundesland=="Schleswig-Holstein"
+replace iso_3166_2_code="DE-HH" if Bundesland=="Hamburg"
+replace iso_3166_2_code="DE-NI" if Bundesland=="Niedersachsen"
+replace iso_3166_2_code="DE-HB" if Bundesland=="Bremen"
+replace iso_3166_2_code="DE-NW" if Bundesland=="Nordrhein-Westfalen"
+replace iso_3166_2_code="DE-HE" if Bundesland=="Hessen"
+replace iso_3166_2_code="DE-RP" if Bundesland=="Rheinland-Pfalz"
+replace iso_3166_2_code="DE-BW" if Bundesland=="Baden-Württemberg"
+replace iso_3166_2_code="DE-BY" if Bundesland=="Bayern"
+replace iso_3166_2_code="DE-SL" if Bundesland=="Saarland"
+replace iso_3166_2_code="DE-BE" if Bundesland=="Berlin"
+replace iso_3166_2_code="DE-BB" if Bundesland=="Brandenburg"
+replace iso_3166_2_code="DE-MV" if Bundesland=="Mecklenburg-Vorpommern"
+replace iso_3166_2_code="DE-SN" if Bundesland=="Sachsen"
+replace iso_3166_2_code="DE-ST" if Bundesland=="Sachsen-Anhalt"
+replace iso_3166_2_code="DE-TH" if Bundesland=="Thüringen"
 
 * Generate sub_region_1
 gen sub_region_1="Germany"
-replace sub_region_1="Schleswig-Holstein" if bundesland_id=="01"
-replace sub_region_1="Hamburg" if bundesland_id=="02"
-replace sub_region_1="Lower Saxony" if bundesland_id=="03"
-replace sub_region_1="Bremen" if bundesland_id=="04"
-replace sub_region_1="North Rhine-Westphalia" if bundesland_id=="05"
-replace sub_region_1="Hessen" if bundesland_id=="06"
-replace sub_region_1="Rhineland-Palatinate" if bundesland_id=="07"
-replace sub_region_1="Baden-Württemberg" if bundesland_id=="08"
-replace sub_region_1="Bavaria" if bundesland_id=="09"
-replace sub_region_1="Saarland" if bundesland_id=="10"
-replace sub_region_1="Berlin" if bundesland_id=="11"
-replace sub_region_1="Brandenburg" if bundesland_id=="12"
-replace sub_region_1="Mecklenburg-Vorpommern" if bundesland_id=="13"
-replace sub_region_1="Saxony" if bundesland_id=="14"
-replace sub_region_1="Saxony-Anhalt" if bundesland_id=="15"
-replace sub_region_1="Thuringia" if bundesland_id=="16"
+replace sub_region_1="Schleswig-Holstein" if Bundesland=="Schleswig-Holstein"
+replace sub_region_1="Hamburg" if Bundesland=="Hamburg"
+replace sub_region_1="Lower Saxony" if Bundesland=="Niedersachsen"
+replace sub_region_1="Bremen" if Bundesland=="Bremen"
+replace sub_region_1="North Rhine-Westphalia" if Bundesland=="Nordrhein-Westfalen"
+replace sub_region_1="Hessen" if Bundesland=="Hessen"
+replace sub_region_1="Rhineland-Palatinate" if Bundesland=="Rheinland-Pfalz"
+replace sub_region_1="Baden-Württemberg" if Bundesland=="Baden-Württemberg"
+replace sub_region_1="Bavaria" if Bundesland=="Bayern"
+replace sub_region_1="Saarland" if Bundesland=="Saarland"
+replace sub_region_1="Berlin" if Bundesland=="Berlin"
+replace sub_region_1="Brandenburg" if Bundesland=="Brandenburg"
+replace sub_region_1="Mecklenburg-Vorpommern" if Bundesland=="Mecklenburg-Vorpommern"
+replace sub_region_1="Saxony" if Bundesland=="Sachsen"
+replace sub_region_1="Saxony-Anhalt" if Bundesland=="Sachsen-Anhalt"
+replace sub_region_1="Thuringia" if Bundesland=="Thüringen"
+
+* Rename
+rename PLZ postal
+rename Kreis sub_region_2
 
 * Drop unnecessary variables
-drop ars ags gemeinde wahlkreis_id wahlkreis area pop pop_m pop_f bundesland_id
+drop Bundesland Typ
 
 * Save
 save "$intermediate/05_germany_postal.dta", replace
+
 
 
 
