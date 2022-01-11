@@ -152,12 +152,12 @@ rename e5_mean e5
 rename e10_mean e10
 duplicates drop
 
-* Generate country variable
-gen country = "Germany"
-
 * Generate treatment variable
-gen vat = 1
-replace vat = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
+gen treatment = 1
+
+* Generate post variable
+gen post = 1
+replace post = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
 
 * Save
 save "$intermediate/01_germany_hourly.dta", replace
@@ -311,11 +311,12 @@ rename e5_mean e5
 rename e10_mean e10
 duplicates drop
 
-* Generate country variable
-gen country = "France"
-
 * Generate treatment variable
-gen vat = 0
+gen treatment = 0
+
+* Generate post variable
+gen post = 1
+replace post = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
 
 * Save
 save "$intermediate/02_france_hourly.dta", replace
@@ -534,6 +535,17 @@ save "$final/final_daily"
 *------------------------------------------------------------------------------*
 *----				1.3 Cleaning, Labelling, Construction				  -----*
 *------------------------------------------------------------------------------*
+
+*--							 1.3.1 Labelling								 --*
+label variable id "Petrol Station ID"
+label variable date "Date"
+label variable postal "Postal Code"
+label variable latitude "Latitude of the Petrol Station"
+label variable longitude "Longitude of the Petrol Station"
+label variable diesel "Diesel Price (weighted average for Germany)"
+label variable e5 "E5 Price (weighted average for Germany)"
+label variable e10 "E10 Price (weighted average for Germany)"
+
 
 ** 1.3.1 Counting stations in certain radius
 use "$data_out/Stations/2020-12-01-stations.dta", clear
