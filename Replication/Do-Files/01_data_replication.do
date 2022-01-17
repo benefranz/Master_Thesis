@@ -18,7 +18,6 @@ forvalues ii=15/30{
 	gen date = date("2020-06-`i'", "YMD")
 	rename uuid id
 	rename post_code postal
-	destring postal, replace
 	
 	drop openingtimes_json first_active name brand street house_number city
 	
@@ -34,7 +33,6 @@ forvalues ii=01/31{
 	gen date = date("2020-07-`i'", "YMD")
 	rename uuid id
 	rename post_code postal
-	destring postal, replace
 	
 	drop openingtimes_json first_active name brand street house_number city
 	
@@ -158,6 +156,33 @@ gen treat = 1
 * Generate post variable
 gen post = 1
 replace post = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
+
+* Destring postal
+destring postal, replace
+
+* Correct postal codes
+replace postal = 01239 if postal == 01275
+replace postal = 06711 if postal == 06727
+replace postal = 06909 if postal == 06909		// Error
+replace postal = 07334 if postal == 07334		// Error
+replace postal = 09557 if postal == 09537
+replace postal = 24955 if postal == 24952
+replace postal = 25813 if postal == 25875
+replace postal = 27637 if postal == 27637		// Error
+replace postal = 28857 if postal == 28875
+replace postal = 29596 if postal == 29596		// Error
+replace postal = 32584 if postal == 32484
+replace postal = 35440 if postal == 35446
+replace postal = 49448 if postal == 49889
+replace postal = 51467 if postal == 51247
+replace postal = 59368 if postal == 59386
+replace postal = 65205 if postal == 66205
+replace postal = 67480 if postal == 67440
+replace postal = 73235 if postal == 72335
+replace postal = 86753 if postal == 86763
+replace postal = 97215 if postal == 91215
+replace postal = 94559 if postal == 94595
+replace postal = 98739 if postal == 98739		// Error
 
 * Save
 save "$intermediate/01_germany_hourly.dta", replace
@@ -407,56 +432,66 @@ save "$intermediate/04_france_postal.dta", replace
 *-----		 1.1.7 German postal codes to Bundesländer (sub_region_1)	  -----*
 
 * Load data
-import excel "$data_in/German_Postal_Web.xlsx", firstrow clear
+import delimited "$data_in/PLZ_BULA_amtlOZUSATZ_2021_Q1.txt", clear
 
 * Generate iso_3166_2_code
 gen iso_3166_2_code="DE"
-replace iso_3166_2_code="DE-SH" if Bundesland=="Schleswig-Holstein"
-replace iso_3166_2_code="DE-HH" if Bundesland=="Hamburg"
-replace iso_3166_2_code="DE-NI" if Bundesland=="Niedersachsen"
-replace iso_3166_2_code="DE-HB" if Bundesland=="Bremen"
-replace iso_3166_2_code="DE-NW" if Bundesland=="Nordrhein-Westfalen"
-replace iso_3166_2_code="DE-HE" if Bundesland=="Hessen"
-replace iso_3166_2_code="DE-RP" if Bundesland=="Rheinland-Pfalz"
-replace iso_3166_2_code="DE-BW" if Bundesland=="Baden-Württemberg"
-replace iso_3166_2_code="DE-BY" if Bundesland=="Bayern"
-replace iso_3166_2_code="DE-SL" if Bundesland=="Saarland"
-replace iso_3166_2_code="DE-BE" if Bundesland=="Berlin"
-replace iso_3166_2_code="DE-BB" if Bundesland=="Brandenburg"
-replace iso_3166_2_code="DE-MV" if Bundesland=="Mecklenburg-Vorpommern"
-replace iso_3166_2_code="DE-SN" if Bundesland=="Sachsen"
-replace iso_3166_2_code="DE-ST" if Bundesland=="Sachsen-Anhalt"
-replace iso_3166_2_code="DE-TH" if Bundesland=="Thüringen"
+replace iso_3166_2_code="DE-SH" if bundesland=="Schleswig-Holstein"
+replace iso_3166_2_code="DE-HH" if bundesland=="Hamburg"
+replace iso_3166_2_code="DE-NI" if bundesland=="Niedersachsen"
+replace iso_3166_2_code="DE-HB" if bundesland=="Bremen"
+replace iso_3166_2_code="DE-NW" if bundesland=="Nordrhein-Westfalen"
+replace iso_3166_2_code="DE-HE" if bundesland=="Hessen"
+replace iso_3166_2_code="DE-RP" if bundesland=="Rheinland-Pfalz"
+replace iso_3166_2_code="DE-BW" if bundesland=="Baden-Württemberg"
+replace iso_3166_2_code="DE-BY" if bundesland=="Bayern"
+replace iso_3166_2_code="DE-SL" if bundesland=="Saarland"
+replace iso_3166_2_code="DE-BE" if bundesland=="Berlin"
+replace iso_3166_2_code="DE-BB" if bundesland=="Brandenburg"
+replace iso_3166_2_code="DE-MV" if bundesland=="Mecklenburg-Vorpommern"
+replace iso_3166_2_code="DE-SN" if bundesland=="Sachsen"
+replace iso_3166_2_code="DE-ST" if bundesland=="Sachsen-Anhalt"
+replace iso_3166_2_code="DE-TH" if bundesland=="Thüringen"
 
 * Generate sub_region_1
 gen sub_region_1="Germany"
-replace sub_region_1="Schleswig-Holstein" if Bundesland=="Schleswig-Holstein"
-replace sub_region_1="Hamburg" if Bundesland=="Hamburg"
-replace sub_region_1="Lower Saxony" if Bundesland=="Niedersachsen"
-replace sub_region_1="Bremen" if Bundesland=="Bremen"
-replace sub_region_1="North Rhine-Westphalia" if Bundesland=="Nordrhein-Westfalen"
-replace sub_region_1="Hessen" if Bundesland=="Hessen"
-replace sub_region_1="Rhineland-Palatinate" if Bundesland=="Rheinland-Pfalz"
-replace sub_region_1="Baden-Württemberg" if Bundesland=="Baden-Württemberg"
-replace sub_region_1="Bavaria" if Bundesland=="Bayern"
-replace sub_region_1="Saarland" if Bundesland=="Saarland"
-replace sub_region_1="Berlin" if Bundesland=="Berlin"
-replace sub_region_1="Brandenburg" if Bundesland=="Brandenburg"
-replace sub_region_1="Mecklenburg-Vorpommern" if Bundesland=="Mecklenburg-Vorpommern"
-replace sub_region_1="Saxony" if Bundesland=="Sachsen"
-replace sub_region_1="Saxony-Anhalt" if Bundesland=="Sachsen-Anhalt"
-replace sub_region_1="Thuringia" if Bundesland=="Thüringen"
+replace sub_region_1="Schleswig-Holstein" if bundesland=="Schleswig-Holstein"
+replace sub_region_1="Hamburg" if bundesland=="Hamburg"
+replace sub_region_1="Lower Saxony" if bundesland=="Niedersachsen"
+replace sub_region_1="Bremen" if bundesland=="Bremen"
+replace sub_region_1="North Rhine-Westphalia" if bundesland=="Nordrhein-Westfalen"
+replace sub_region_1="Hessen" if bundesland=="Hessen"
+replace sub_region_1="Rhineland-Palatinate" if bundesland=="Rheinland-Pfalz"
+replace sub_region_1="Baden-Württemberg" if bundesland=="Baden-Württemberg"
+replace sub_region_1="Bavaria" if bundesland=="Bayern"
+replace sub_region_1="Saarland" if bundesland=="Saarland"
+replace sub_region_1="Berlin" if bundesland=="Berlin"
+replace sub_region_1="Brandenburg" if bundesland=="Brandenburg"
+replace sub_region_1="Mecklenburg-Vorpommern" if bundesland=="Mecklenburg-Vorpommern"
+replace sub_region_1="Saxony" if bundesland=="Sachsen"
+replace sub_region_1="Saxony-Anhalt" if bundesland=="Sachsen-Anhalt"
+replace sub_region_1="Thuringia" if bundesland=="Thüringen"
 
 * Rename
-rename PLZ postal
-rename Kreis sub_region_2
+rename plz postal
 
 * Drop unnecessary variables
-drop Bundesland Typ
+drop oname plz_ozusatz bundesland plz_art_auslieferung
+
+* Add missing postals
+set obs `=_N+21'
+replace postal = 01275 if _n == _N-20
+replace iso_3166_2_code = "" if _n == _N-20
+replace sub_region_1 = "" if _n == _N-20
+replace postal = 01275 if _n == _N-20
+replace iso_3166_2_code = "" if _n == _N-20
+replace sub_region_1 = "" if _n == _N-20
+replace postal = 01275 if _n == _N-20
+replace iso_3166_2_code = "" if _n == _N-20
+replace sub_region_1 = "" if _n == _N-20
 
 * Save
 save "$intermediate/05_germany_postal.dta", replace
-
 
 
 
