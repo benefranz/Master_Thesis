@@ -478,6 +478,7 @@ rename plz postal
 * Drop unnecessary variables
 drop oname plz_ozusatz bundesland plz_art_auslieferung
 
+/*
 * Add missing postals
 set obs `=_N+21'
 replace postal = 01275 if _n == _N-20
@@ -489,6 +490,7 @@ replace sub_region_1 = "" if _n == _N-20
 replace postal = 01275 if _n == _N-20
 replace iso_3166_2_code = "" if _n == _N-20
 replace sub_region_1 = "" if _n == _N-20
+*/
 
 * Save
 save "$intermediate/05_germany_postal.dta", replace
@@ -505,12 +507,21 @@ save "$intermediate/05_germany_postal.dta", replace
 use "$intermediate/01_germany_weighted.dta", clear
 
 * Merge
-merge m:m postal using "$intermediate/05_germany_postal.dta"
+merge m:m postal using "$intermediate/05_germany_postal.dta" // 326 not matched from master -> see errors with postal
+keep if _merge == 3
+drop _merge
 
 
 
 *--					1.2.3 Merge German Data with Mobility					 --*
 
+* Merge
+merge m:m sub_region_1 date using"$source/Mobility/2020_DE_Region_Mobility_Report.dta"	// 0 not matched from master
+keep if _merge == 3
+drop _merge
+
+* Save
+save "$final/01_germany.dta", replace
 
 
 
@@ -523,6 +534,7 @@ use "$intermediate/02_france_daily.dta", clear
 merge m:m postal using "$intermediate/04_france_postal.dta" //1844 not matched from master
 keep if _merge == 3
 drop _merge
+
 
 
 *--					1.2.5 Merge French Data with Mobility					 --*
