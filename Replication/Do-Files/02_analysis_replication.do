@@ -43,7 +43,13 @@ use "$final/final_weighted.dta", clear
 *** Generate interaction of treat and post
 generate vat = treat*post 
 
-*** Dif-in-Dif
+*** Dif-in-Dif Baseline
 didregress (ln_diesel) (vat), group(id) time(date)
 didregress (ln_e5) (vat), group(id) time(date)
 didregress (ln_e10) (vat), group(id) time(date)
+
+*** Dif-in-Dif Controls
+didregress (ln_diesel retail_and_recreation_percent_ch workplaces_percent_change_from_b) (vat), group(id) time(date)
+didregress (ln_e5 retail_and_recreation_percent_ch workplaces_percent_change_from_b) (vat), group(id) time(date)
+didregress (ln_e10 retail_and_recreation_percent_ch workplaces_percent_change_from_b) (vat), group(id) time(date)
+

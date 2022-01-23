@@ -148,7 +148,7 @@ drop diesel e5 e10
 rename diesel_mean diesel
 rename e5_mean e5
 rename e10_mean e10
-duplicates drop
+duplicates drop id time, force
 
 * Generate treatment variable
 gen treat = 1
@@ -185,6 +185,9 @@ replace postal = 94559 if postal == 94595
 replace postal = 98739 if postal == 98739		// Error
 
 replace postal = 35767 if latitude == float(50.6813) & longitude == float(8.148122)
+
+* Sort
+sort id time
 
 * Save
 save "$intermediate/01_germany_hourly.dta", replace
@@ -234,7 +237,10 @@ rename e5_mean e5
 rename e10_mean e10
 
 * Collapse via duplicates drop
-duplicates drop
+duplicates drop id date, force
+
+* Sort
+sort id date
 
 * Save
 save "$intermediate/01_germany_weighted.dta", replace
@@ -257,7 +263,10 @@ rename e5_mean e5
 rename e10_mean e10
 
 * Collapse via duplicates drop
-duplicates drop
+duplicates drop id date, force
+
+* Sort
+sort id date
 
 * Save
 save "$intermediate/01_germany_daily.dta", replace
@@ -340,7 +349,7 @@ drop diesel e5 e10
 rename diesel_mean diesel
 rename e5_mean e5
 rename e10_mean e10
-duplicates drop
+duplicates drop id time, force
 
 * Generate treatment variable
 gen treat = 0
@@ -390,6 +399,9 @@ replace postal = 94390 if postal == 94542
 replace postal = 94150 if postal == 94594
 replace postal = 95330 if postal == 95331
 
+* Sort
+sort id time
+
 * Save
 save "$intermediate/02_france_hourly.dta", replace
 
@@ -406,10 +418,14 @@ drop diesel e5 e10 time hour
 rename diesel_mean diesel
 rename e5_mean e5
 rename e10_mean e10
-duplicates drop
+duplicates drop id date, force
+
+* Sort
+sort id date
 
 * Save
 save "$intermediate/02_france_daily.dta", replace
+
 
 
 *-----				1.1.4 Type of Attached Street (Germany)				  -----*
@@ -624,7 +640,7 @@ foreach var of varlist diesel e5 e10{
 	gen ln_`var' = ln(`var')
 }
 * Save
-save "$final/final_daily.dta"
+save "$final/final_weighted.dta"
 
 
 
