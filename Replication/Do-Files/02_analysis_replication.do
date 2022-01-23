@@ -11,7 +11,7 @@
 *----- 	 						 2.1.1 Hourly							  -----*
 
 *** Load data
-use "$data_out/final_hourly.dta", clear
+use "$final/final_hourly.dta", clear
 
 *** Setup panel
 xtset id time
@@ -26,7 +26,7 @@ xtreg ln_diesel vat, fe
 *-----								2.1.1 Daily							  -----*
 
 *** Load data
-use "$data_out/final_daily.dta", clear
+use "$final/final_daily.dta", clear
 
 *** Setup panel
 xtset id date
@@ -38,12 +38,12 @@ xtreg ln_diesel vat, fe
 
 
 *** Load data
-use "$data_out/final_weighted.dta", clear
+use "$final/final_weighted.dta", clear
 
-*** Setup panel
-xtset id date
+*** Generate interaction of treat and post
+generate vat = treat*post 
 
 *** Dif-in-Dif
-xtreg ln_e5 vat, fe
-xtreg ln_e10 vat, fe
-xtreg ln_diesel vat, fe
+didregress (ln_diesel) (vat), group(id) time(date)
+didregress (ln_e5) (vat), group(id) time(date)
+didregress (ln_e10) (vat), group(id) time(date)

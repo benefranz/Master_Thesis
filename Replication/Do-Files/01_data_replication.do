@@ -453,6 +453,19 @@ foreach c in "DE" "FR"{
 }
 
 
+* Rename some name in sub_region_2 for merge
+use "$source/Mobility/2020_FR_Region_Mobility_Report.dta", clear
+replace sub_region_2="Ariège" if sub_region_2=="Ariege"
+replace sub_region_2="Bouches-du-Rhône" if sub_region_2=="Bouches-du-Rhone"
+replace sub_region_2="Corrèze" if sub_region_2=="Correze"
+replace sub_region_2="Finistère" if sub_region_2=="Finistere"
+replace sub_region_2="Isère" if sub_region_2=="Isere"
+replace sub_region_2="Puy-de-Dôme" if sub_region_2=="Puy-de-Dome"
+
+* Save
+save "$source/Mobility/2020_FR_Region_Mobility_Report.dta", replace
+
+
 
 *----- 1.1.6 French postal codes to regions (sub_region_1) and deparments (sub_region_2) -----*
 
@@ -555,6 +568,9 @@ merge m:m sub_region_1 date using"$source/Mobility/2020_DE_Region_Mobility_Repor
 keep if _merge == 3
 drop _merge
 
+* sub_region_2 to string for append
+tostring sub_region_2, replace
+
 * Save
 save "$final/01_germany.dta", replace
 
@@ -574,14 +590,6 @@ drop _merge
 
 *--					1.2.5 Merge French Data with Mobility					 --*
 
-* Rename some name in sub_region_2 for merge
-replace sub_region_2="Ariege" if sub_region_2=="Ariège"
-replace sub_region_2="Bouches-du-Rhone" if sub_region_2=="Bouches-du-Rhône"
-replace sub_region_2="Correze" if sub_region_2=="Corrèze"
-replace sub_region_2="Finistere" if sub_region_2=="Finistère"
-replace sub_region_2="Isere" if sub_region_2=="Isère"
-replace sub_region_2="Puy-de-Dome" if sub_region_2=="Puy-de-Dôme"
-
 * Merge
 merge m:m sub_region_2 date using"$source/Mobility/2020_FR_Region_Mobility_Report.dta" // 0 not matched from master
 keep if _merge == 3
@@ -593,7 +601,7 @@ save "$final/02_france.dta", replace
 *--						1.2.6 Append German and French Data					 --*
 
 * Hourly
-use "$intermediate/02_france_hourly", clear
+use "$intermediate/02_france_hourly.dta", clear
 append using "$intermediate/01_prices_germany_hourly.dta"
 
 * Generate log prices
@@ -604,28 +612,20 @@ foreach var of varlist diesel e5 e10{
 save "$final/final_hourly"
 
 
-* Daily weighted
-use "$intermediate/02_france_daily", clear
-append using "$intermediate/01_prices_germany_weighted.dta"
-
-* Generate log prices	
-foreach var of varlist diesel e5 e10{
-	gen ln_`var' = ln(`var')
-}
-* Save
-save "$final/final_weighted"
-	
-
 * Daily
-use "$intermediate/02_france_daily", clear
-append using "$intermediate/01_prices_germany_daily.dta"
+
+
+* Daily weighted
+use "$final/02_france.dta", clear
+append using "$final/01_germany.dta"
 	
 * Generate log prices
 foreach var of varlist diesel e5 e10{
 	gen ln_`var' = ln(`var')
 }
 * Save
-save "$final/final_daily"
+save "$final/final_daily.dta"
+
 
 
 *------------------------------------------------------------------------------*
