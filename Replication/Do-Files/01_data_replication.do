@@ -163,14 +163,14 @@ destring postal, replace
 * Correct postal codes
 replace postal = 01239 if postal == 01275
 replace postal = 06711 if postal == 06727
-replace postal = 06909 if postal == 06909		// Error
-replace postal = 07334 if postal == 07334		// Error
+replace postal = 06905 if postal == 06909
+replace postal = 07333 if postal == 07334
 replace postal = 09557 if postal == 09537
 replace postal = 24955 if postal == 24952
 replace postal = 25813 if postal == 25875
-replace postal = 27637 if postal == 27637		// Error
+replace postal = 27639 if postal == 27637
 replace postal = 28857 if postal == 28875
-replace postal = 29596 if postal == 29596		// Error
+replace postal = 29559 if postal == 29596
 replace postal = 32584 if postal == 32484
 replace postal = 35440 if postal == 35446
 replace postal = 49448 if postal == 49889
@@ -183,6 +183,8 @@ replace postal = 86753 if postal == 86763
 replace postal = 97215 if postal == 91215
 replace postal = 94559 if postal == 94595
 replace postal = 98739 if postal == 98739		// Error
+
+replace postal = 35767 if latitude == float(50.6813) & longitude == float(8.148122)
 
 * Save
 save "$intermediate/01_germany_hourly.dta", replace
@@ -347,6 +349,47 @@ gen treat = 0
 gen post = 1
 replace post = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
 
+* Correct postal codes
+replace postal = 04200 if postal == 4204
+replace postal = 06510 if postal == 6770
+replace postal = 13290 if postal == 13546
+replace postal = 13400 if postal == 13783
+replace postal = 13290 if postal == 13853
+replace postal = 20140 if postal == 20156
+replace postal = 30000 if postal == 30021
+replace postal = 31200 if postal == 31075
+replace postal = 31300 if postal == 31076
+replace postal = 31100 if postal == 31084
+replace postal = 34470 if postal == 34475
+replace postal = 37170 if postal == 37172
+replace postal = 42300 if postal == 42334
+replace postal = 50200 if postal == 50204
+replace postal = 51100 if postal == 51721
+replace postal = 53100 if postal == 53102
+replace postal = 53200 if postal == 53203
+replace postal = 57300 if postal == 57303
+replace postal = 66000 if postal == 66962
+replace postal = 67450 if postal == 67452
+replace postal = 68700 if postal == 68703
+replace postal = 69400 if postal == 69651
+replace postal = 69800 if postal == 69803
+replace postal = 70000 if postal == 70004
+replace postal = 73420 if postal == 73182
+replace postal = 76200 if postal == 76371
+replace postal = 77860 if postal == 77740
+replace postal = 78200 if postal == 78205
+replace postal = 80080 if postal == 80046
+replace postal = 80800 if postal == 80380
+replace postal = 84000 if postal == 84097
+replace postal = 85300 if postal == 85306
+replace postal = 85800 if postal == 85804
+replace postal = 89340 if postal == 89720
+replace postal = 92240 if postal == 92242
+replace postal = 94310 if postal == 94537
+replace postal = 94390 if postal == 94542
+replace postal = 94150 if postal == 94594
+replace postal = 95330 if postal == 95331
+
 * Save
 save "$intermediate/02_france_hourly.dta", replace
 
@@ -478,19 +521,11 @@ rename plz postal
 * Drop unnecessary variables
 drop oname plz_ozusatz bundesland plz_art_auslieferung
 
-/*
 * Add missing postals
 set obs `=_N+21'
-replace postal = 01275 if _n == _N-20
-replace iso_3166_2_code = "" if _n == _N-20
-replace sub_region_1 = "" if _n == _N-20
-replace postal = 01275 if _n == _N-20
-replace iso_3166_2_code = "" if _n == _N-20
-replace sub_region_1 = "" if _n == _N-20
-replace postal = 01275 if _n == _N-20
-replace iso_3166_2_code = "" if _n == _N-20
-replace sub_region_1 = "" if _n == _N-20
-*/
+replace postal = 98739 if _n == _N-20
+replace iso_3166_2_code = "DE-TH" if _n == _N-20
+replace sub_region_1 = "Thuringia" if _n == _N-20
 
 * Save
 save "$intermediate/05_germany_postal.dta", replace
@@ -507,7 +542,7 @@ save "$intermediate/05_germany_postal.dta", replace
 use "$intermediate/01_germany_weighted.dta", clear
 
 * Merge
-merge m:m postal using "$intermediate/05_germany_postal.dta" // 326 not matched from master -> see errors with postal
+merge m:m postal using "$intermediate/05_germany_postal.dta" // 0 not matched from master
 keep if _merge == 3
 drop _merge
 
@@ -531,7 +566,7 @@ save "$final/01_germany.dta", replace
 use "$intermediate/02_france_daily.dta", clear
 
 * Merge
-merge m:m postal using "$intermediate/04_france_postal.dta" //1844 not matched from master
+merge m:m postal using "$intermediate/04_france_postal.dta" //0 not matched from master
 keep if _merge == 3
 drop _merge
 
@@ -539,8 +574,18 @@ drop _merge
 
 *--					1.2.5 Merge French Data with Mobility					 --*
 
+* Rename some name in sub_region_2 for merge
+replace sub_region_2="Ariege" if sub_region_2=="Ariège"
+replace sub_region_2="Bouches-du-Rhone" if sub_region_2=="Bouches-du-Rhône"
+replace sub_region_2="Correze" if sub_region_2=="Corrèze"
+replace sub_region_2="Finistere" if sub_region_2=="Finistère"
+replace sub_region_2="Isere" if sub_region_2=="Isère"
+replace sub_region_2="Puy-de-Dome" if sub_region_2=="Puy-de-Dôme"
+
 * Merge
-merge m:m sub_region_2 date using"$source/Mobility/2020_FR_Region_Mobility_Report.dta" // 32,880 not matched from master
+merge m:m sub_region_2 date using"$source/Mobility/2020_FR_Region_Mobility_Report.dta" // 0 not matched from master
+keep if _merge == 3
+drop _merge
 
 * Save
 save "$final/02_france.dta", replace
