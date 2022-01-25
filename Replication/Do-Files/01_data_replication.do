@@ -610,7 +610,7 @@ drop _merge
 * Merge
 merge m:m sub_region_1 date using"$source/Mobility/2020_DE_Region_Mobility_Report.dta"	// 0 not matched from master
 keep if _merge == 3
-drop _merge
+drop _merge country_region_code country_region metro_area census_fips_code place_id grocery_and_pharmacy_percent_cha parks_percent_change_from_baseli transit_stations_percent_change_ residential_percent_change_from_
 
 * sub_region_2 to string for append
 tostring sub_region_2, replace
@@ -637,13 +637,14 @@ drop _merge
 * Merge
 merge m:m sub_region_2 date using"$source/Mobility/2020_FR_Region_Mobility_Report.dta" // 0 not matched from master
 keep if _merge == 3
-drop _merge
+drop _merge country_region_code country_region metro_area census_fips_code place_id grocery_and_pharmacy_percent_cha parks_percent_change_from_baseli transit_stations_percent_change_ residential_percent_change_from_
 
 * Save
 save "$final/02_france.dta", replace
 
 *--						1.2.6 Append German and French Data					 --*
 
+/*
 * Hourly
 use "$intermediate/02_france_hourly.dta", clear
 append using "$intermediate/01_prices_germany_hourly.dta"
@@ -654,7 +655,7 @@ foreach var of varlist diesel e5 e10{
 }
 * Save
 save "$final/final_hourly"
-
+*/
 
 * Daily
 
@@ -663,20 +664,54 @@ save "$final/final_hourly"
 use "$final/02_france.dta", clear
 append using "$final/01_germany.dta"
 	
+* Save
+save "$final/merged_weighted.dta", replace
+
+
+
+*------------------------------------------------------------------------------*
+*----				1.3 Construction and Label/Rename					  -----*
+*------------------------------------------------------------------------------*
+
+*--								1.3.1 Construction							 --*
+
+* Competition in 5km radius
+keep id latitude longitude
+duplicates drop id, force
+
+* Save
+save "$intermediate/06_competition.dta", replace
+
+* Drop other variables
+rename id id2
+
+* Save
+save "$intermediate/06_competition_using.dta", replace
+
+* Distance evaluation 
+use "$intermediate/06_competition.dta", clear
+geonear id latitude longitude using "$intermediate/06_competition_using.dta", n(id2 latitude longitude) within(5) long
+bysort id (id2): egen within5 = total(km_to_id2 <= 5)
+
+
+
+
 * Generate log prices
 foreach var of varlist diesel e5 e10{
 	gen ln_`var' = ln(`var')
 }
-* Save
-save "$final/final_weighted.dta"
 
 
 
-*------------------------------------------------------------------------------*
-*----				1.3 Cleaning, Labelling, Construction				  -----*
-*------------------------------------------------------------------------------*
+* Competition in postal code
 
-*--							 1.3.1 Labelling								 --*
+
+
+*--							 1.3.2 Label/Rename								 --*
+
+* Rename
+rename retail_and_recreation_percent_ch retail_recreation
+rename workplaces_percent_change_from_b workplace
 
 * Regular Labels
 label variable id "Petrol Station ID"
@@ -687,6 +722,14 @@ label variable longitude "Longitude of the Petrol Station"
 label variable diesel "Diesel Price (weighted average for Germany)"
 label variable e5 "E5 Price (weighted average for Germany)"
 label variable e10 "E10 Price (weighted average for Germany)"
+label variable ln_diesel "Log Diesel Price"
+label variable ln_e5 "Log E5 Price"
+label variable ln_e10 "Log E10 Price"
+label variable retail_recreation "Change in Retail & Recreation Mobility"
+label variable workplace "Change in Workplace Mobility"
+label variable sub_region_1 "Bundesländer/Départements"
+label variable sub_region_2 "French Regions"
+label variable iso_3166_2_code "ISO 3166-2 Code"
 
 * Labels with Value Label
 label variable treat "Treatment Dummy (1 for Germany)"
@@ -699,29 +742,6 @@ label variable street_type "Type of Attached Street (Highway or Normal Street)"
 label define stl 1 "Highway" 0 "Normal Street"
 label values street_type stl
 
-
-*--					1.3.1 Counting stations in certain radius			     --*
-
-* Load 
-use "$intermediate/01_germany_weighted", clear
-
-* Get only stations
-duplicates drop id, force
-
 * Save
-save "$data_out/stations_main.dta", replace
-
-
-* Drop other variables
-drop postal treat post date diesel e5 e10 
-rename id id2
-
-* Save
-save "$data_out/stations_using.dta", replace
-
-
-* Distance evaluation 
-use "$data_out/stations_main.dta", clear
-geonear id latitude longitude using "$data_out/stations_using.dta", n(id2 latitude longitude) within(2) long
-bysort id (id2): egen within2 = total(km_to_id2 <= 2)
+save "$final/00_final_weighted.dta", replace
 
