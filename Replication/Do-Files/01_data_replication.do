@@ -19,7 +19,7 @@ forvalues ii=15/30{
 	rename uuid id
 	rename post_code postal
 	
-	drop openingtimes_json first_active name brand street house_number city
+	drop openingtimes_json first_active street name brand house_number city
 	
 	save "$source/Stations_Germany/2020-06-`i'-stations.dta", replace
 }
@@ -34,7 +34,7 @@ forvalues ii=01/31{
 	rename uuid id
 	rename post_code postal
 	
-	drop openingtimes_json first_active name brand street house_number city
+	drop openingtimes_json first_active street name brand house_number city
 	
 	save "$source/Stations_Germany/2020-07-`i'-stations.dta", replace
 }
@@ -435,7 +435,6 @@ import excel "$data_in/tankstellen_autobahn_bundestrasse.xls", clear
 
 * Rename
 rename A street_id
-rename B street_type
 rename C id
 rename D name
 rename E brand
@@ -443,9 +442,22 @@ rename F street
 rename G number
 rename H postal
 rename I city
+rename J longitude
+rename K latitude
 
 * Drop unnecessary variables
-drop street_id name street number postal city
+drop street_id id name brand street number postal city 
+
+* Destring longitude/latitude
+destring longitude latitude, replace
+
+* Drop duplicates
+duplicates drop
+
+* Round to merge
+generate longitude_merge = round(longitude, 0.00000001)
+generate latitude_merge = round(latitude, 0.00000001)
+drop longitude latitude
 
 * save
 save "$intermediate/03_germany_streettype.dta", replace
@@ -565,10 +577,26 @@ save "$intermediate/05_germany_postal.dta", replace
 *----						1.2 Merge and Append						  -----*
 *------------------------------------------------------------------------------*
 
-*--					1.2.2 Merge German Data with Regions					 --*
-
-* Load data
+*--				1.2.1 Merge German Data with Attached Street Type			 --*
 use "$intermediate/01_germany_weighted.dta", clear
+
+* Round for merge
+generate longitude_merge = round(longitude, 0.00000001)
+generate latitude_merge = round(latitude, 0.00000001)
+
+* Merge
+merge m:1 longitude_merge latitude_merge using "$intermediate/03_germany_streettype.dta"
+drop if _merge==2
+drop longitude_merge latitude_merge _merge
+
+* Street Type to Dummy
+gen street_type = 0
+replace street_type = 1 if B == "Autobahn"
+drop B
+
+
+
+*--					1.2.2 Merge German Data with Regions					 --*
 
 * Merge
 merge m:m postal using "$intermediate/05_germany_postal.dta" // 0 not matched from master
@@ -672,7 +700,28 @@ label define stl 1 "Highway" 0 "Normal Street"
 label values street_type stl
 
 
-** 1.3.1 Counting stations in certain radius
-use "$data_out/Stations/2020-12-01-stations.dta", clear
-geonear street latitude longitude using "$data_out/Stations/2020-12-05-stations.dta", n(uuid latitude longitude) within(15) long
+*--					1.3.1 Counting stations in certain radius			     --*
+
+* Load 
+use "$intermediate/01_germany_weighted", clear
+
+* Get only stations
+duplicates drop id, force
+
+* Save
+save "$data_out/stations_main.dta", replace
+
+
+* Drop other variables
+drop postal treat post date diesel e5 e10 
+rename id id2
+
+* Save
+save "$data_out/stations_using.dta", replace
+
+
+* Distance evaluation 
+use "$data_out/stations_main.dta", clear
+geonear id latitude longitude using "$data_out/stations_using.dta", n(id2 latitude longitude) within(2) long
+bysort id (id2): egen within2 = total(km_to_id2 <= 2)
 
