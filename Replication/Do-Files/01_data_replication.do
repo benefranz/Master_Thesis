@@ -11,6 +11,7 @@
 *-----				1.1.1 Tankerkönig Stations (Germany)				  -----*
 
 * June
+**#
 forvalues ii=15/30{
 	local i : di %02.0f `ii'
 	import delimited "$data_in/06 Stations/2020-06-`i'-stations.csv", varnames(1) encoding("utf-8") clear
@@ -695,15 +696,23 @@ bysort id (id2): egen within5 = total(km_to_id2 <= 5)
 
 
 
+* Competition in postal code
+
+
 
 * Generate log prices
 foreach var of varlist diesel e5 e10{
 	gen ln_`var' = ln(`var')
 }
 
+* Generate interaction of treat and post
+generate vat = treat*post 
 
+* Drop duplicates
+duplicates drop id date, force
 
-* Competition in postal code
+* Setup panel
+xtset id date
 
 
 
@@ -741,6 +750,9 @@ label values post postl
 label variable street_type "Type of Attached Street (Highway or Normal Street)"
 label define stl 1 "Highway" 0 "Normal Street"
 label values street_type stl
+
+* Date Formatting
+format date %tdDD_Mon_CCYY
 
 * Save
 save "$final/00_final_weighted.dta", replace
