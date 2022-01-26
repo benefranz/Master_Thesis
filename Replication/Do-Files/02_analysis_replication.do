@@ -29,9 +29,18 @@ drop if frombeginning<47
 */
 
 * Dif-in-Dif
-xtdidregress (ln_diesel) (vat), group(id) time(date)
-xtdidregress (ln_e5) (vat), group(id) time(date)
-xtdidregress (ln_e10) (vat), group(id) time(date)
+foreach var of varlist ln_e5 ln_e10 ln_diesel{
+		quietly xtdidregress (`var') (vat), group(id) time(date)
+		eststo baseline_`var'
+}
+
+* Result output
+esttab using "$tables/reg_baseline.tex", /// 
+drop(*.date) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.4fc)) se(par) ci(par)) nonumbers brackets ///
+stats(mean N r2,labels("Mean (Pre-reform)" "Observations" "R-squared") fmt(%9.3fc %9.0fc %9.3fc)) ///
+mtitles("E5" "E10" "Diesel") ///
+label booktabs replace nogap collabels(none) nonotes
+
 
 
 

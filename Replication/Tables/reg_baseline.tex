@@ -1,0 +1,22 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{3}{c}}
+\toprule
+                    &\multicolumn{1}{c}{E5}&\multicolumn{1}{c}{E10}&\multicolumn{1}{c}{Diesel}\\
+\midrule
+ATET                &                     &                     &                     \\
+r1vs0.vat           &     -0.0202\sym{***}&     -0.0116\sym{***}&     -0.0157\sym{***}\\
+                    &    (0.0002)         &    (0.0003)         &    (0.0002)         \\
+                    &[-0.0205,-0.0199]         &[-0.0121,-0.0111]         &[-0.0162,-0.0152]         \\
+\midrule
+Controls            &                     &                     &                     \\
+Constant            &      0.1180\sym{***}&      0.2319\sym{***}&      0.2169\sym{***}\\
+                    &    (0.0002)         &    (0.0002)         &    (0.0001)         \\
+                    &[0.1176,0.1183]         &[0.2316,0.2322]         &[0.2166,0.2172]         \\
+\midrule
+Mean (Pre-reform)   &                     &                     &                     \\
+Observations        &   1,093,600         &     862,289         &     938,233         \\
+R-squared           &                     &                     &                     \\
+\bottomrule
+\end{tabular}
+}
