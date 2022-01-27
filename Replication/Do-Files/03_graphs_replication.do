@@ -6,52 +6,50 @@ graph set window fontface "Garamond"
 
 use "$final/00_final_weighted.dta", clear
 
-*** Diesel Prices Germany
-preserve
+*------------------------------------------------------------------------------*
+*----							3.1 Graphs								  -----*
+*------------------------------------------------------------------------------*
 
-keep diesel treat date
+*-----			 		3.1.1 Parallel Trend Assumption		 			  -----*
 
-collapse (mean) diesel, by (date treat) 
+foreach var of varlist ln_e5 ln_e10 ln_diesel{
+	
+	preserve
 
-twoway  (line diesel date if treat==1 , lcolor(navy) msymbol(O) msize(medsmall) mcolor(navy) lwidth(medthick)), /// 
- xline(22097, lcolor(red) lpattern(dash)) ///
-graphregion(color(white)) bgcolor(white) xtitle("Dates", height(6))  ///
-ytitle("Diesel Price per liter in €" , height(6))  ///	
-ylabel(1.06(0.01)1.11)
-graph export "$graphs/diesel_germany.pdf", replace as(pdf)
+	collapse (mean) `var', by(date treat)
+	reshape wide `var', i(date) j(treat)
 
-restore
+	graph twoway line `var'* date, sort name(group_means, replace) ///
+	legend(label(1 "Control (France)") label(2 "Treatment (Germany)"))	///
+	xline(22097, lcolor(red) lpattern(dash))	///
+	graphregion(color(white)) ///
+	bgcolor(white) xtitle("Dates", height(6))	///
+	ytitle("Ln of Price € per liter" , height(6))
+	graph export "$graphs/parallel_trends_`var'.pdf", replace as(pdf)
 
-
-*** E5 Prices Germany
-preserve
-
-keep e5 treat date
-
-collapse (mean) e5, by (date treat) 
-
-twoway  (line e5 date if treat==1 , lcolor(navy) msymbol(O) msize(medsmall) mcolor(navy) lwidth(medthick)), /// 
- xline(22097, lcolor(red) lpattern(dash)) ///
-graphregion(color(white)) bgcolor(white) xtitle("Dates", height(6))  ///
-ytitle("E5 Price per liter in €" , height(6))  ///	
-ylabel(1.25(0.01)1.3)
-graph export "$graphs/e5_germany.pdf", replace as(pdf)
-
-restore
+	restore
+}
 
 
-*** E10 Prices Germany
-preserve
 
-keep e10 treat date
 
-collapse (mean) e10, by (date treat) 
+*-----	  3.1.2 Price Plot for Comparison (full and zero pass-through)	  -----*
 
-twoway  (line e10 date if treat==1 , lcolor(navy) msymbol(O) msize(medsmall) mcolor(navy) lwidth(medthick)), /// 
- xline(22097, lcolor(red) lpattern(dash)) ///
-graphregion(color(white)) bgcolor(white) xtitle("Dates", height(6))  ///
-ytitle("E10 Price per liter in €" , height(6))  ///	
-ylabel(1.22(0.01)1.27)
-graph export "$graphs/e10_germany.pdf", replace as(pdf)
+foreach var of varlist e5 e10 diesel{
+	
+	preserve
+	
+	keep `var' treat date
 
-restore
+	collapse (mean) `var', by (date treat) 
+
+	twoway  (line `var' date if treat==1 , lcolor(navy) msymbol(O) msize(medsmall) mcolor(navy) lwidth(medthick)), /// 
+	xline(22097, lcolor(red) lpattern(dash)) ///
+	graphregion(color(white)) bgcolor(white) xtitle("Dates", height(6))  ///
+	ytitle("Price € per liter" , height(6))  ///	
+
+	graph export "$graphs/`var'_germany.pdf", replace as(pdf)
+	
+	restore
+}
+
