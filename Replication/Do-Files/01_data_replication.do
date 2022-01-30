@@ -5,7 +5,7 @@
 
 
 *------------------------------------------------------------------------------*
-*----					1.1 Data Download and Reshaping					  -----*
+*-----					1.1 Data Download and Reshaping					  -----*
 *------------------------------------------------------------------------------*
 
 *-----				1.1.1 Tankerkönig Stations (Germany)				  -----*
@@ -575,10 +575,10 @@ save "$intermediate/05_germany_postal.dta", replace
 
 
 *------------------------------------------------------------------------------*
-*----						1.2 Merge and Append						  -----*
+*-----						1.2 Merge and Append						  -----*
 *------------------------------------------------------------------------------*
 
-*--				1.2.1 Merge German Data with Attached Street Type			 --*
+*-----			1.2.1 Merge German Data with Attached Street Type		  -----*
 use "$intermediate/01_germany_weighted.dta", clear
 
 * Round for merge
@@ -597,7 +597,7 @@ drop B
 
 
 
-*--					1.2.2 Merge German Data with Regions					 --*
+*-----					1.2.2 Merge German Data with Regions			  -----*
 
 * Merge
 merge m:m postal using "$intermediate/05_germany_postal.dta" // 0 not matched from master
@@ -606,7 +606,7 @@ drop _merge
 
 
 
-*--					1.2.3 Merge German Data with Mobility					 --*
+*-----				1.2.3 Merge German Data with Mobility				  -----*
 
 * Merge
 merge m:m sub_region_1 date using"$source/Mobility/2020_DE_Region_Mobility_Report.dta"	// 0 not matched from master
@@ -621,7 +621,7 @@ save "$final/01_germany.dta", replace
 
 
 
-*--					1.2.4 Merge French  Data with Regions					 --*
+*-----					1.2.4 Merge French  Data with Regions			  -----*
 
 * Load data
 use "$intermediate/02_france_daily.dta", clear
@@ -633,7 +633,7 @@ drop _merge
 
 
 
-*--					1.2.5 Merge French Data with Mobility					 --*
+*-----				1.2.5 Merge French Data with Mobility				  -----*
 
 * Merge
 merge m:m sub_region_2 date using"$source/Mobility/2020_FR_Region_Mobility_Report.dta" // 0 not matched from master
@@ -643,7 +643,7 @@ drop _merge country_region_code country_region metro_area census_fips_code place
 * Save
 save "$final/02_france.dta", replace
 
-*--						1.2.6 Append German and French Data					 --*
+*-----					1.2.6 Append German and French Data				  -----*
 
 /*
 * Hourly
@@ -671,52 +671,118 @@ save "$final/merged_weighted.dta", replace
 
 
 *------------------------------------------------------------------------------*
-*----				1.3 Construction and Label/Rename					  -----*
+*-----							1.3 Construction						  -----*
 *------------------------------------------------------------------------------*
 
-*--								1.3.1 Construction							 --*
+*----- 						1.3.1 Competition by Radius					  -----* 
 
-* Competition in 5km radius
+* Load data
+use "$final/merged_weighted.dta", clear
+
+* Reduce sample by id
 keep id latitude longitude
 duplicates drop id, force
 
 * Save
-save "$intermediate/06_competition.dta", replace
+save "$source/Competition/competition_main.dta", replace
 
-* Drop other variables
+* Rename id
 rename id id2
 
 * Save
-save "$intermediate/06_competition_using.dta", replace
+save "$source/Competition/competition_using.dta", replace
 
 * Distance evaluation 
-use "$intermediate/06_competition.dta", clear
-geonear id latitude longitude using "$intermediate/06_competition_using.dta", n(id2 latitude longitude) within(5) long
-bysort id (id2): egen within5 = total(km_to_id2 <= 5)
+foreach i in 2 5 10{
+	
+	use "$source/Competition/competition_main.dta", clear
+	
+	preserve
+	
+	geonear id latitude longitude using "$source/Competition/competition_using.dta", n(id2 latitude longitude) within(`i') long
+	bysort id (id2): egen within`i' = total(km_to_id2 <= `i')	
+	
+	drop id2 km_to_id2
+	
+	duplicates drop
+	
+	save "$source/Competition/competition_radius_`i'.dta", replace
+	
+	restore
+}
+
+* Merge
+use "$source/Competition/competition_radius_2.dta", clear
+
+foreach i in 5 10{
+	merge 1:1 id using "$source/Competition/competition_radius_`i'.dta"
+	drop _merge
+}
+
+* Save 
+save "$intermediate/06_competition_radius.dta", replace 
 
 
 
-* Competition in postal code
+
+
+*----- 						1.3.2 Competition by Postal					  -----*
+
+* Load data
+use "$final/merged_weighted.dta", clear
+
+* Reduce sample by id
+keep id postal
+duplicates drop id, force
+
+* Sort
+sort postal
+
+* Generate within postal
+egen within_postal = count(id), by (postal)
+
+* Save 
+save "$intermediate/06_competition_postal.dta", replace 
+
+
+* Merge competition by radius
+use "$final/merged_weighted.dta", clear
+merge m:1 id using "$intermediate/06_competition_radius.dta" // 0 not matched
+drop _merge
+
+* Merge competition by postal
+merge m:1 id using "$intermediate/06_competition_postal"
+drop _merge
 
 
 
-* Generate log prices
+*-----	 						1.3.3 Ln Prices							  -----*
+
+* Load data
 foreach var of varlist diesel e5 e10{
 	gen ln_`var' = ln(`var')
 }
 
-* Generate interaction of treat and post
+
+
+*-----				1.3.3 Generate Interaction of Treat and Post		  -----*
 generate vat = treat*post 
 
-* Drop duplicates
+
+
+*----- 						1.3.4 Drop Duplicates						  -----*
 duplicates drop id date, force
 
-* Setup panel
+
+
+*-----	 						1.3.5 Setup Panel						  -----*
 xtset id date
 
 
 
-*--							 1.3.2 Label/Rename								 --*
+*------------------------------------------------------------------------------*
+*-----						1.4 Label and Rename						  -----*
+*------------------------------------------------------------------------------*
 
 * Rename
 rename retail_and_recreation_percent_ch retail_recreation

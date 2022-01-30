@@ -32,7 +32,6 @@ foreach var of varlist ln_e5 ln_e10 ln_diesel{
 
 
 
-
 *-----	  3.1.2 Price Plot for Comparison (full and zero pass-through)	  -----*
 
 foreach var of varlist e5 e10 diesel{
