@@ -10,44 +10,44 @@
 
 *-----				1.1.1 Tankerkönig Stations (Germany)				  -----*
 
-* June
+* December
 
-forvalues ii=15/30{
+forvalues ii=16/31{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/06 Stations/2020-06-`i'-stations.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/12 Stations/2020-12-`i'-stations.csv", varnames(1) encoding("utf-8") clear
 	
-	gen date = date("2020-06-`i'", "YMD")
+	gen date = date("2020-12-`i'", "YMD")
 	rename uuid id
 	rename post_code postal
 	
 	drop openingtimes_json first_active street name brand house_number city
 	
-	save "$source/Stations_Germany/2020-06-`i'-stations.dta", replace
+	save "$source/Stations_Germany/2020-12-`i'-stations.dta", replace
 }
 
 
-* July
+* January
 forvalues ii=01/31{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/07 Stations/2020-07-`i'-stations.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/01 Stations/2021-01-`i'-stations.csv", varnames(1) encoding("utf-8") clear
 	
-	gen date = date("2020-07-`i'", "YMD")
+	gen date = date("2021-01-`i'", "YMD")
 	rename uuid id
 	rename post_code postal
 	
 	drop openingtimes_json first_active street name brand house_number city
 	
-	save "$source/Stations_Germany/2020-07-`i'-stations.dta", replace
+	save "$source/Stations_Germany/2021-01-`i'-stations.dta", replace
 }
 
 
 
 *-----					1.1.2 Tankerkönig Prices (Germany)				  -----*
 
-* June
-forvalues ii=15/30{
+* December
+forvalues ii=16/31{
 	local i : di %02.0f `ii'	
-	import delimited "$data_in/06 Prices/2020-06-`i'-prices.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/12 Prices/2020-12-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
 	rename station_uuid id
 	
@@ -59,13 +59,13 @@ forvalues ii=15/30{
 	gen hour = hh(time)
 	gen datehour = date*24 + hour
 	
-	save "$source/Prices_Germany/2020-06-`i'-prices.dta", replace
+	save "$source/Prices_Germany/2020-12-`i'-prices.dta", replace
 }
 
-* July
+* January
 forvalues ii=01/31{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/07 Prices/2020-07-`i'-prices.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/01 Prices/2021-01-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
 	rename station_uuid id
 	
@@ -77,44 +77,44 @@ forvalues ii=01/31{
 	gen hour = hh(time)
 	gen datehour = date*24 + hour
 	
-	save "$source/Prices_Germany/2020-07-`i'-prices.dta", replace
+	save "$source/Prices_Germany/2021-01-`i'-prices.dta", replace
 }
 
-* Merge prices with information stations (June)
-forvalues ii=15/30{
+* Merge prices with information stations (December)
+forvalues ii=16/31{
 	local i : di %02.0f `ii'
-	use "$source/Prices_Germany/2020-06-`i'-prices.dta", clear
+	use "$source/Prices_Germany/2020-12-`i'-prices.dta", clear
 	
-	merge m:1 id date using "$source/Stations_Germany/2020-06-`i'-stations.dta"
+	merge m:1 id date using "$source/Stations_Germany/2020-12-`i'-stations.dta"
 	
 	keep if _merge == 3
 	drop _merge
 	
-	save "$source/Merged_Germany/2020-06-`i'-merged.dta", replace
+	save "$source/Merged_Germany/2020-12-`i'-merged.dta", replace
 }
 
-* Merge prices with information stations (July)
+* Merge prices with information stations (January)
 forvalues ii=01/31{
 	local i : di %02.0f `ii'
-	use "$source/Prices_Germany/2020-07-`i'-prices.dta", clear
+	use "$source/Prices_Germany/2021-01-`i'-prices.dta", clear
 	
-	merge m:1 id date using "$source/Stations_Germany/2020-07-`i'-stations.dta"
+	merge m:1 id date using "$source/Stations_Germany/2021-01-`i'-stations.dta"
 	
 	keep if _merge == 3
 	drop _merge
 	
-	save "$source/Merged_Germany/2020-07-`i'-merged.dta", replace
+	save "$source/Merged_Germany/2021-01-`i'-merged.dta", replace
 }
 
 * Apend Data
-use "$source/Merged_Germany/2020-06-15-merged.dta", clear
-forvalues mm = 16/30 {
+use "$source/Merged_Germany/2020-12-16-merged.dta", clear
+forvalues mm = 17/31 {
 	local m : di %02.0f `mm'	
-	append using "$source/Merged_Germany/2020-06-`m'-merged.dta"
+	append using "$source/Merged_Germany/2020-12-`m'-merged.dta"
 }
 forvalues oo = 01/31{ 
 	local o : di %02.0f `oo'	
-	cap append using "$source/Merged_Germany/2020-07-`o'-merged.dta"
+	cap append using "$source/Merged_Germany/2021-01-`o'-merged.dta"
 }
 
 * Create numeric ID based on non-numeric ID
@@ -128,7 +128,7 @@ foreach var of varlist diesel e5 e10 {
 }
 
 * Expand data
-bys id (time): gen exp = cond(_n==_N, td(01-08-2020)*24-datehour, datehour[_n+1]-datehour)
+bys id (time): gen exp = cond(_n==_N, td(01-02-2021)*24-datehour, datehour[_n+1]-datehour)
 expand exp
 bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == time[_n-1]
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
@@ -156,7 +156,7 @@ gen treat = 1
 
 * Generate post variable
 gen post = 1
-replace post = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
+replace post = 0 if time < clock("01jan2021 00:00:00", "DMYhms")
 
 * Destring postal
 destring postal, replace
@@ -277,7 +277,16 @@ save "$intermediate/01_germany_daily.dta", replace
 *-----			 	  1.1.3 Le Prix Des Carburants (France)		   		  -----*
 
 * Load data
+import delimited "$data_in/PrixCarburants_annuel_2021.csv", numericcols(9) encoding("utf-8") clear
+
+* Save
+save "$source/PrixCarburants_annuel_2021.dta", replace
+
+* Load data
 import delimited "$data_in/PrixCarburants_annuel_2020.csv", numericcols(9) encoding("utf-8") clear
+
+* Append
+append using "$source/PrixCarburants_annuel_2021.dta"
 
 * Rename variables
 rename v1 id
@@ -302,8 +311,8 @@ drop v6
 drop id_fuel
 drop if fuel == "E85"
 drop if fuel == "GPLc"
-drop if time < clock("2020-06-15 00:00:00", "YMDhms")
-drop if time > clock("2020-07-31 23:59:59", "YMDhms")
+drop if time < clock("2020-12-16 00:00:00", "YMDhms")
+drop if time > clock("2021-01-31 23:59:59", "YMDhms")
 
 * Convert to euros
 replace price = price/1000
@@ -357,7 +366,7 @@ gen treat = 0
 
 * Generate post variable
 gen post = 1
-replace post = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
+replace post = 0 if time < clock("01jan2021 00:00:00", "DMYhms")
 
 * Correct postal codes
 replace postal = 04200 if postal == 4204
@@ -456,8 +465,8 @@ destring longitude latitude, replace
 duplicates drop
 
 * Round to merge
-generate longitude_merge = round(longitude, 0.00000001)
-generate latitude_merge = round(latitude, 0.00000001)
+generate longitude_merge = round(longitude, 0.0000001)
+generate latitude_merge = round(latitude, 0.0000001)
 drop longitude latitude
 
 * save
@@ -470,7 +479,9 @@ save "$intermediate/03_germany_streettype.dta", replace
 * Load data
 foreach c in "DE" "FR"{
 		
-		import delimited "$data_in/2020_`c'_Region_Mobility_Report", encoding("utf-8") clear
+	foreach i in 2020 2021{
+		
+		import delimited "$data_in/`i'_`c'_Region_Mobility_Report", encoding("utf-8") clear
 		
 		gen double date2 = date(date, "YMD")
 		drop date
@@ -478,21 +489,33 @@ foreach c in "DE" "FR"{
 		format date %tdDD_Mon_CCYY
 		
 		
-		save "$source/Mobility/2020_`c'_Region_Mobility_Report.dta", replace
+		save "$source/Mobility/`i'_`c'_Region_Mobility_Report.dta", replace
+	}
 }
 
 
 * Rename some name in sub_region_2 for merge
-use "$source/Mobility/2020_FR_Region_Mobility_Report.dta", clear
-replace sub_region_2="Ariège" if sub_region_2=="Ariege"
-replace sub_region_2="Bouches-du-Rhône" if sub_region_2=="Bouches-du-Rhone"
-replace sub_region_2="Corrèze" if sub_region_2=="Correze"
-replace sub_region_2="Finistère" if sub_region_2=="Finistere"
-replace sub_region_2="Isère" if sub_region_2=="Isere"
-replace sub_region_2="Puy-de-Dôme" if sub_region_2=="Puy-de-Dome"
+foreach i in 2020 2021{
+	use "$source/Mobility/`i'_FR_Region_Mobility_Report.dta", clear
+	replace sub_region_2="Ariège" if sub_region_2=="Ariege"
+	replace sub_region_2="Bouches-du-Rhône" if sub_region_2=="Bouches-du-Rhone"
+	replace sub_region_2="Corrèze" if sub_region_2=="Correze"
+	replace sub_region_2="Finistère" if sub_region_2=="Finistere"
+	replace sub_region_2="Isère" if sub_region_2=="Isere"
+	replace sub_region_2="Puy-de-Dôme" if sub_region_2=="Puy-de-Dome"
+	
+	* Save
+	save "$source/Mobility/`i'_FR_Region_Mobility_Report.dta", replace
+}
 
-* Save
-save "$source/Mobility/2020_FR_Region_Mobility_Report.dta", replace
+* Append
+foreach c in "DE" "FR"{
+	use "$source/Mobility/2020_`c'_Region_Mobility_Report.dta", clear
+	append using "$source/Mobility/2021_`c'_Region_Mobility_Report.dta"
+	save "$source/Mobility/mobility_`c'.dta"
+}
+
+
 
 
 
@@ -582,8 +605,8 @@ save "$intermediate/05_germany_postal.dta", replace
 use "$intermediate/01_germany_weighted.dta", clear
 
 * Round for merge
-generate longitude_merge = round(longitude, 0.00000001)
-generate latitude_merge = round(latitude, 0.00000001)
+generate longitude_merge = round(longitude, 0.0000001)
+generate latitude_merge = round(latitude, 0.0000001)
 
 * Merge
 merge m:1 longitude_merge latitude_merge using "$intermediate/03_germany_streettype.dta"
@@ -609,7 +632,7 @@ drop _merge
 *-----				1.2.3 Merge German Data with Mobility				  -----*
 
 * Merge
-merge m:m sub_region_1 date using"$source/Mobility/2020_DE_Region_Mobility_Report.dta"	// 0 not matched from master
+merge m:m sub_region_1 date using"$source/Mobility/mobility_DE.dta"	// 0 not matched from master
 keep if _merge == 3
 drop _merge country_region_code country_region metro_area census_fips_code place_id grocery_and_pharmacy_percent_cha parks_percent_change_from_baseli transit_stations_percent_change_ residential_percent_change_from_
 
@@ -636,7 +659,7 @@ drop _merge
 *-----				1.2.5 Merge French Data with Mobility				  -----*
 
 * Merge
-merge m:m sub_region_2 date using"$source/Mobility/2020_FR_Region_Mobility_Report.dta" // 0 not matched from master
+merge m:m sub_region_2 date using"$source/Mobility/mobility_FR.dta" // 0 not matched from master
 keep if _merge == 3
 drop _merge country_region_code country_region metro_area census_fips_code place_id grocery_and_pharmacy_percent_cha parks_percent_change_from_baseli transit_stations_percent_change_ residential_percent_change_from_
 

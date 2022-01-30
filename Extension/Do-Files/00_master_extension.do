@@ -33,36 +33,43 @@ cap log close
 *--					Packages					--*
 *-------------------------------------------------*
 cap ssc install geonear
+cap ssc install asgen
+
 
 
 *-------------------------------------------------*
 *--					Directories					--*
 *-------------------------------------------------*
-
-global main "/Users/benediktfranz/OneDrive - bwedu/Studium/Master/MasterThesis/Analyse" // Global to define main location
+global main "/Users/benediktfranz/OneDrive - bwedu/Studium/Master/MasterThesis/Empirical Analysis/Extension" // Global to define main location
 cd "$main"
 global data_in "$main/Data Input"
 global data_out "$main/Data Output"
+global source "$data_out/Source"
+global intermediate "$data_out/Intermediate"
+global final "$data_out/Final"
 global graphs "$main/Graphs"
 global tables "$main/Tables"
 global dofiles "$main/Do-Files"
 
 cap mkdir "$data_in"
-cap mkdir "$data_out" 
-cap mkdir "$data_out/Prices"
-cap mkdir "$data_out/Stations"
-cap mkdir "$data_out/Mobility"
+cap mkdir "$data_out"
+cap mkdir "$source" 
+cap mkdir "$source/Prices_Germany"
+cap mkdir "$source/Stations_Germany"
+cap mkdir "$source/Merged_Germany"
+cap mkdir "$source/Mobility"
+cap mkdir "$source/Competition"
+cap mkdir "$intermediate"
+cap mkdir "$final"
 cap mkdir "$graphs"
 cap mkdir "$tables"
 cap mkdir "$dofiles"
 
 
 
-
 *-------------------------------------------------*
 *--					Do-Files					--*
 *-------------------------------------------------*
-
-do "$dofiles/01_data_thesis"
-*do "$dofiles/02_analysis_thesis"
-*do "$dofiles/03_graphs_thesis"	
+*do "$dofiles/01_data_extension"
+*do "$dofiles/02_analysis_extension"
+*do "$dofiles/03_graphs_extension"	
