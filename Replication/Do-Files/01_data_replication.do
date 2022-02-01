@@ -151,12 +151,8 @@ rename e5_mean e5
 rename e10_mean e10
 duplicates drop id time, force
 
-* Generate treatment variable
-gen treat = 1
-
-* Generate post variable
-gen post = 1
-replace post = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
+* Generate country variable
+gen country = "Germany"
 
 * Destring postal
 destring postal, replace
@@ -353,11 +349,7 @@ rename e10_mean e10
 duplicates drop id time, force
 
 * Generate treatment variable
-gen treat = 0
-
-* Generate post variable
-gen post = 1
-replace post = 0 if time < clock("01jul2020 00:00:00", "DMYhms")
+gen country = "France"
 
 * Correct postal codes
 replace postal = 04200 if postal == 4204
@@ -754,7 +746,22 @@ drop _merge
 
 
 
-*-----	 						1.3.3 Ln Prices							  -----*
+*-----			1.3.3 Generate Treat, Post, and Dif-in-Dif Variable		  -----*
+
+* Treat
+generate treat = 1
+replace treat = 0 if country == "France"
+
+* Post
+generate post = 1
+replace post = 0 if date < date("01jul2020", "DMY")
+
+* Dif-in-Dif
+generate vat = treat * post 
+
+
+
+*-----	 						1.3.4 Ln Prices							  -----*
 
 * Load data
 foreach var of varlist diesel e5 e10{
@@ -763,17 +770,17 @@ foreach var of varlist diesel e5 e10{
 
 
 
-*-----				1.3.3 Generate Interaction of Treat and Post		  -----*
-generate vat = treat*post 
+*-----		1.3.5 Drop if Petrol Stations Appear after first Date		  -----*
+bysort id (date): gen N = _N
+bysort id (date): gen n = _n
+
+bysort id (date): egen todrop = max(n==1 & date>date("15jun2020","DMY"))
+drop if todrop == 1
+drop n N todrop
 
 
 
-*----- 						1.3.4 Drop Duplicates						  -----*
-duplicates drop id date, force
-
-
-
-*-----	 						1.3.5 Setup Panel						  -----*
+*-----	 						1.3.7 Setup Panel						  -----*
 xtset id date
 
 
