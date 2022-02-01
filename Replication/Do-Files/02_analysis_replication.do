@@ -62,7 +62,7 @@ use "$final/00_final_weighted.dta", clear
 * Dif-in-Dif
 foreach var of varlist ln_e5 ln_e10 ln_diesel{
 		quietly xtdidregress (`var' retail_recreation workplace) (vat), group(id) time(date)
-		eststo baseline_`var'
+		*eststo controls_`var'
 }
 
 
@@ -77,6 +77,9 @@ foreach var of varlist ln_e5 ln_e10 ln_diesel{
 use "$final/00_final_weighted.dta", clear
 
 * Dif-in-Dif
+foreach var of varlist ln_e5 ln_e10 ln_diesel{
+	areg `var' i.street_type##i.treat##i.post retail_recreation workplace i.date, absorb(id) cluster(id)
+}
 
 
 

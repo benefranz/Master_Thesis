@@ -780,7 +780,7 @@ drop n N todrop
 
 
 
-*-----	 						1.3.7 Setup Panel						  -----*
+*-----	 						1.3.6 Setup Panel						  -----*
 xtset id date
 
 
