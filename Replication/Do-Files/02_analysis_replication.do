@@ -60,9 +60,10 @@ xtdidregress (ln_e10) (vat), group(id) time(time)
 use "$final/00_final_weighted.dta", clear
 
 * Dif-in-Dif
-xtdidregress (ln_diesel retail_and_recreation_percent_ch workplaces_percent_change_from_b) (vat), group(id) time(date)
-xtdidregress (ln_e5 retail_and_recreation_percent_ch workplaces_percent_change_from_b) (vat), group(id) time(date)
-xtdidregress (ln_e10 retail_and_recreation_percent_ch workplaces_percent_change_from_b) (vat), group(id) time(date)
+foreach var of varlist ln_e5 ln_e10 ln_diesel{
+		quietly xtdidregress (`var' retail_recreation workplace) (vat), group(id) time(date)
+		eststo baseline_`var'
+}
 
 
 
