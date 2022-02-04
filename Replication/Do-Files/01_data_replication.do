@@ -886,6 +886,6 @@ bysort id (date): egen todrop = max(n==1 & date>date("15jun2020","DMY"))
 drop if todrop == 1
 drop n N todrop
 
-save "$final/00_final_weighted_balanced"
+save "$final/00_final_weighted_balanced", replace
 
 

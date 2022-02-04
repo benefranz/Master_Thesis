@@ -59,7 +59,7 @@ local ypath `var'
 preserve
 
 * Dummy for days
-forvalues i=22081/22127 {
+forvalues i=22067/22127 {
 gen d_`i'=(date==`i')
 gen d_`i'_t=(date==`i' & treat==1)
 }
@@ -75,7 +75,7 @@ gen upall_t=. if date==22097
 gen lowall_t=. if date==22097
 
 * Pre
-forvalues y=22081/22096 {
+forvalues y=22067/22096 {
 replace ball_t=_b[d_`y'_t] if date==`y' 
 replace upall_t=_b[d_`y'_t]+1.96*_se[d_`y'_t] if date==`y' 
 replace lowall_t=_b[d_`y'_t]-1.96*_se[d_`y'_t] if date==`y'  
@@ -96,13 +96,13 @@ so date
 twoway  (scatter ball date , msize(vsmall) lcolor(navy) mcolor(navy) lpattern(solid) lwidth(medthin)) ///
 (rcap upall lowall date, lcolor(navy) mcolor(navy) lpattern(solid)), ///
 graphregion(color(white)) bgcolor(white) xtitle("Dates",height(6)) yline(0, lcolor(black)) yscale(range(-0.03 0.03)) ylabel(-0.03 (0.01) 0.03) ///
-ytitle(Effect on `l`ypath'', height(6)) xline(22097.5, lcolor(red) lpattern(dash)) xlabel(22081(10)22127) ////
+ytitle(Effect on `l`ypath'', height(6)) xline(22097.5, lcolor(red) lpattern(dash)) xlabel(22067(10)22127) ////
 legend(off) ///
 text(0.02 22115.5 "b=`b_`var'' (`se_`var'')", size(medsmall))
 graph export "$graphs/pt_`var'.pdf", replace as(pdf)
 
 * Test for each pre date
-forvalues y=22081/22096 {
+forvalues y=22067/22096 {
 test (d_`y'_t=0)
 }
 
