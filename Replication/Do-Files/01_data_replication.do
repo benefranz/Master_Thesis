@@ -12,7 +12,7 @@
 
 * June
 
-forvalues ii=15/30{
+forvalues ii=01/30{
 	local i : di %02.0f `ii'
 	import delimited "$data_in/06 Stations/2020-06-`i'-stations.csv", varnames(1) encoding("utf-8") clear
 	
@@ -45,7 +45,7 @@ forvalues ii=01/31{
 *-----					1.1.2 Tankerkönig Prices (Germany)				  -----*
 
 * June
-forvalues ii=15/30{
+forvalues ii=01/30{
 	local i : di %02.0f `ii'	
 	import delimited "$data_in/06 Prices/2020-06-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
@@ -81,7 +81,7 @@ forvalues ii=01/31{
 }
 
 * Merge prices with information stations (June)
-forvalues ii=15/30{
+forvalues ii=01/30{
 	local i : di %02.0f `ii'
 	use "$source/Prices_Germany/2020-06-`i'-prices.dta", clear
 	
@@ -108,7 +108,7 @@ forvalues ii=01/31{
 
 * Apend Data
 use "$source/Merged_Germany/2020-06-15-merged.dta", clear
-forvalues mm = 16/30 {
+forvalues mm = 02/30 {
 	local m : di %02.0f `mm'	
 	append using "$source/Merged_Germany/2020-06-`m'-merged.dta"
 }
@@ -118,12 +118,13 @@ forvalues oo = 01/31{
 }
 
 * Create numeric ID based on non-numeric ID
+sort id date
 egen id_new = group(id)
 drop id
 rename id_new id
 
 * Replace 0 or missing values with previous prices
-foreach var of varlist diesel e5 e10 {
+foreach var of varlist e5 e10 diesel {
     bys id (time): replace `var' = `var'[_n-1] if `var' == 0 | `var' == .
 }
 
@@ -142,10 +143,10 @@ format time %tc
 drop exp date hour datehour
 
 * Collapse data hourly
-foreach var of varlist diesel e5 e10 {
+foreach var of varlist e5 e10 diesel {
 	bysort id time: egen `var'_mean = mean(`var')
 }
-drop diesel e5 e10
+drop e5 e10 diesel
 rename diesel_mean diesel
 rename e5_mean e5
 rename e10_mean e10
@@ -182,6 +183,10 @@ replace postal = 94559 if postal == 94595
 replace postal = 98739 if postal == 98739		// Error
 
 replace postal = 35767 if latitude == float(50.6813) & longitude == float(8.148122)
+
+* Format coordinates
+format latitude %20.12f
+format longitude %20.12f
 
 * Sort
 sort id time
@@ -222,11 +227,11 @@ replace fueling_behaviour = 1.6 if hour == 21
 replace fueling_behaviour = 0.6 if hour == 22
 
 * Generate weighted means
-foreach var of varlist diesel e5 e10{
+foreach var of varlist e5 e10 diesel{
 	bysort id date: asgen `var'_mean = `var', weights(fueling_behaviour)
 }
 * Drop unnecessary variables
-drop diesel e5 e10 time hour fueling_behaviour
+drop e5 e10 diesel time hour fueling_behaviour
 
 * Rename variables
 rename diesel_mean diesel
@@ -243,16 +248,46 @@ sort id date
 save "$intermediate/01_germany_weighted.dta", replace
 
 
+* Add weeks
+gen week = wofd(date)
+
+* Format
+format date %td
+format week %tw
+
+* Generate means
+foreach var of varlist e5 e10 diesel{
+	bysort id week: egen `var'_mean = mean(`var')
+}
+
+* Drop unnecessary variables
+drop e5 e10 diesel date
+
+* Rename variables
+rename diesel_mean diesel
+rename e5_mean e5
+rename e10_mean e10
+
+* Collapse via duplicates drop
+duplicates drop id week, force
+
+* Sort
+sort id week
+
+* Save
+save "$intermediate/01_germany_weekly.dta", replace
+
+
 * Restore
 restore
 
 * Generate means
-foreach var of varlist diesel e5 e10{
+foreach var of varlist e5 e10 diesel{
 	bysort id date: egen `var'_mean = mean(`var')
 }
 
 * Drop unnecessary variables
-drop diesel e5 e10 time hour
+drop e5 e10 diesel time hour
 
 * Rename variables
 rename diesel_mean diesel
@@ -298,7 +333,7 @@ drop v6
 drop id_fuel
 drop if fuel == "E85"
 drop if fuel == "GPLc"
-drop if time < clock("2020-06-15 00:00:00", "YMDhms")
+drop if time < clock("2020-06-01 00:00:00", "YMDhms")
 drop if time > clock("2020-07-31 23:59:59", "YMDhms")
 
 * Convert to euros
@@ -320,7 +355,7 @@ gen hour = hh(time)
 gen datehour = date*24 + hour
 
 * Replace 0 or missing values with previous prices
-foreach var of varlist diesel e5 e10 {
+foreach var of varlist e5 e10 diesel {
     bys id (time): replace `var' = `var'[_n-1] if `var' == 0 | `var' == .
 }
 
@@ -339,10 +374,10 @@ format time %tc
 drop exp date hour datehour
 
 * Collapse data hourly
-foreach var of varlist diesel e5 e10 {
+foreach var of varlist e5 e10 diesel {
 	bysort id time: egen `var'_mean = mean(`var')
 }
-drop diesel e5 e10
+drop e5 e10 diesel
 rename diesel_mean diesel
 rename e5_mean e5
 rename e10_mean e10
@@ -392,6 +427,10 @@ replace postal = 94390 if postal == 94542
 replace postal = 94150 if postal == 94594
 replace postal = 95330 if postal == 95331
 
+* Format coordinates
+format latitude %20.12f
+format longitude %20.12f
+
 * Sort
 sort id time
 
@@ -404,10 +443,10 @@ gen date = dofc(time)
 gen hour = hh(time)
 drop if hour<6
 drop if hour>22
-foreach var of varlist diesel e5 e10 {
+foreach var of varlist e5 e10 diesel {
 	bysort id date: egen `var'_mean = mean(`var')
 }
-drop diesel e5 e10 time hour
+drop e5 e10 diesel time hour
 rename diesel_mean diesel
 rename e5_mean e5
 rename e10_mean e10
@@ -451,6 +490,10 @@ duplicates drop
 generate longitude_merge = round(longitude, 0.00000001)
 generate latitude_merge = round(latitude, 0.00000001)
 drop longitude latitude
+
+* Format coordinates
+format latitude %20.12f
+format longitude %20.12f
 
 * save
 save "$intermediate/03_germany_streettype.dta", replace
@@ -643,7 +686,7 @@ use "$intermediate/02_france_hourly.dta", clear
 append using "$intermediate/01_prices_germany_hourly.dta"
 
 * Generate log prices
-foreach var of varlist diesel e5 e10{
+foreach var of varlist e5 e10 diesel{
 	gen ln_`var' = ln(`var')
 }
 * Save
@@ -672,7 +715,7 @@ save "$final/merged_weighted.dta", replace
 use "$final/merged_weighted.dta", clear
 
 * Reduce sample by id
-keep id latitude longitude
+keep id country latitude longitude
 duplicates drop id, force
 
 * Save
@@ -764,23 +807,14 @@ generate vat = treat * post
 *-----	 						1.3.4 Ln Prices							  -----*
 
 * Load data
-foreach var of varlist diesel e5 e10{
+foreach var of varlist e5 e10 diesel{
 	gen ln_`var' = ln(`var')
 }
 
 
 
-*-----		1.3.5 Drop if Petrol Stations Appear after first Date		  -----*
-bysort id (date): gen N = _N
-bysort id (date): gen n = _n
-
-bysort id (date): egen todrop = max(n==1 & date>date("15jun2020","DMY"))
-drop if todrop == 1
-drop n N todrop
-
-
-
 *-----	 						1.3.6 Setup Panel						  -----*
+duplicates drop
 xtset id date
 
 
@@ -807,7 +841,7 @@ label variable e10 "E10 Price (weighted average for Germany)"
 label variable ln_diesel "Log Diesel Price"
 label variable ln_e5 "Log E5 Price"
 label variable ln_e10 "Log E10 Price"
-label variable retail_recreation "Change in Retail & Recreation Mobility"
+label variable retail_recreation "Change in Retail and Recreation Mobility"
 label variable workplace "Change in Workplace Mobility"
 label variable sub_region_1 "Bundesländer/Départements"
 label variable sub_region_2 "French Regions"
@@ -839,5 +873,19 @@ format date %tdDD_Mon_CCYY
 
 
 * Save
-save "$final/00_final_weighted.dta", replace
+save "$final/00_final_weighted_unbalanced.dta", replace
+
+
+
+*----- 	Drop if Petrol Stations Appear after first Date (Balance Panel)   -----*
+
+bysort id (date): gen N = _N
+bysort id (date): gen n = _n
+
+bysort id (date): egen todrop = max(n==1 & date>date("15jun2020","DMY"))
+drop if todrop == 1
+drop n N todrop
+
+save "$final/00_final_weighted_balanced"
+
 
