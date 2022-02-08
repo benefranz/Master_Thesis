@@ -36,7 +36,7 @@ foreach var of varlist ln_e5 ln_e10 ln_diesel{
 }
 
 
-
+/*
 *** Daily
 
 * Add overall coeffcients
@@ -111,7 +111,7 @@ test (d_22081_t=0) (d_22082_t=0) (d_22083_t=0) (d_22084_t=0) (d_22085_t=0) (d_22
 
 restore
 }
-
+*/
 
 
 *-----	  3.1.2 Price Plot for Comparison (full and zero pass-through)	  -----*

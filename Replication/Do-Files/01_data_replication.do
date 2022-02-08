@@ -5,14 +5,14 @@
 
 
 *------------------------------------------------------------------------------*
-*-----					1.1 Data Download and Reshaping					  -----*
+**#						1.1 Data Download and Reshaping					  	 #**
 *------------------------------------------------------------------------------*
 
 *-----				1.1.1 Tankerkönig Stations (Germany)				  -----*
 
 * June
 
-forvalues ii=01/30{
+forvalues ii=15/30{
 	local i : di %02.0f `ii'
 	import delimited "$data_in/06 Stations/2020-06-`i'-stations.csv", varnames(1) encoding("utf-8") clear
 	
@@ -45,7 +45,7 @@ forvalues ii=01/31{
 *-----					1.1.2 Tankerkönig Prices (Germany)				  -----*
 
 * June
-forvalues ii=01/30{
+forvalues ii=15/30{
 	local i : di %02.0f `ii'	
 	import delimited "$data_in/06 Prices/2020-06-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
@@ -81,7 +81,7 @@ forvalues ii=01/31{
 }
 
 * Merge prices with information stations (June)
-forvalues ii=01/30{
+forvalues ii=15/30{
 	local i : di %02.0f `ii'
 	use "$source/Prices_Germany/2020-06-`i'-prices.dta", clear
 	
@@ -108,7 +108,7 @@ forvalues ii=01/31{
 
 * Apend Data
 use "$source/Merged_Germany/2020-06-15-merged.dta", clear
-forvalues mm = 02/30 {
+forvalues mm = 16/30 {
 	local m : di %02.0f `mm'	
 	append using "$source/Merged_Germany/2020-06-`m'-merged.dta"
 }
@@ -248,36 +248,6 @@ sort id date
 save "$intermediate/01_germany_weighted.dta", replace
 
 
-* Add weeks
-gen week = wofd(date)
-
-* Format
-format date %td
-format week %tw
-
-* Generate means
-foreach var of varlist e5 e10 diesel{
-	bysort id week: egen `var'_mean = mean(`var')
-}
-
-* Drop unnecessary variables
-drop e5 e10 diesel date
-
-* Rename variables
-rename diesel_mean diesel
-rename e5_mean e5
-rename e10_mean e10
-
-* Collapse via duplicates drop
-duplicates drop id week, force
-
-* Sort
-sort id week
-
-* Save
-save "$intermediate/01_germany_weekly.dta", replace
-
-
 * Restore
 restore
 
@@ -333,7 +303,7 @@ drop v6
 drop id_fuel
 drop if fuel == "E85"
 drop if fuel == "GPLc"
-drop if time < clock("2020-06-01 00:00:00", "YMDhms")
+drop if time < clock("2020-06-15 00:00:00", "YMDhms")
 drop if time > clock("2020-07-31 23:59:59", "YMDhms")
 
 * Convert to euros
@@ -438,18 +408,25 @@ sort id time
 save "$intermediate/02_france_hourly.dta", replace
 
 
-* Collapse data daily
+* Generate time variables
 gen date = dofc(time)
 gen hour = hh(time)
+
+* Opening hours 6:00 - 22:00
 drop if hour<6
 drop if hour>22
+
+* Set price to price at 17:00 per day and station
 foreach var of varlist e5 e10 diesel {
-	bysort id date: egen `var'_mean = mean(`var')
+	bysort id date: generate `var'_17 = `var' if hour==17
+	bysort id date (`var'_17): replace `var'_17 = `var'_17[_n-1] if missing(`var'_17) & _n > 1
 }
 drop e5 e10 diesel time hour
-rename diesel_mean diesel
-rename e5_mean e5
-rename e10_mean e10
+rename e5_17 e5
+rename e10_17 e10
+rename diesel_17 diesel
+
+* Collapse data daily
 duplicates drop id date, force
 
 * Sort
@@ -610,7 +587,7 @@ save "$intermediate/05_germany_postal.dta", replace
 
 
 *------------------------------------------------------------------------------*
-*-----						1.2 Merge and Append						  -----*
+**#							1.2 Merge and Append							 #**
 *------------------------------------------------------------------------------*
 
 *-----			1.2.1 Merge German Data with Attached Street Type		  -----*
@@ -706,7 +683,7 @@ save "$final/merged_weighted.dta", replace
 
 
 *------------------------------------------------------------------------------*
-*-----							1.3 Construction						  -----*
+**#								1.3 Construction							 #**
 *------------------------------------------------------------------------------*
 
 *----- 						1.3.1 Competition by Radius					  -----* 

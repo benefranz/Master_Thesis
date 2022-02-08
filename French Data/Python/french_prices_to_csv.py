@@ -35,10 +35,10 @@ def csv_to_xml(infile,outfile):
                 writer.writerow(row)
     return
 
-years = ["2020","2021"]
+years = ["2019", "2020", "2021"]
 
 for i in years:
     print(i)
     infile = "PrixCarburants_annuel_{}.xml".format(i)
-    outfile = "/Users/benediktfranz/OneDrive - bwedu/Studium/Master/MasterThesis/Analyse/Data Input/PrixCarburants_annuel_{}.csv".format(i)
+    outfile = "/Users/benediktfranz/OneDrive - bwedu/Studium/Master/MasterThesis/Empirical Analysis/Replication/Data Input/PrixCarburants_annuel_{}.csv".format(i)
     csv_to_xml(infile,outfile)
