@@ -213,7 +213,7 @@ sort treat date
 replace diesel = diesel - 0.08 if treat==1 & date>=date("01jan2021","DMY")
 replace e5 = e5 - 0.07 if treat==1 & date>=date("01jan2021","DMY")
 replace e10 = e10 - 0.07 if treat==1 & date>=date("01jan2021","DMY")
-
+*/
 * Weekly 
 gen week = wofd(date)
 format week %tw
@@ -298,17 +298,11 @@ foreach var of varlist e5 e10 diesel{
 	xline(731.5, lcolor(gs8) lpattern(dash))	/// * (line between Dec 2020 and Jan 2021)
 	legend(label(1 "France") label(2 "Germany"))	///
 	graphregion(color(white)) ///
-	ytitle("`l`var'' Price Index (01/2019 = 100)")	///
-	xtitle("") xlabel(708(6)743)
+	//title("`l`var'' Price Development (CO2 Tax Adjustment)") ///
+	ytitle("`l`var'' Price Index (01/2019 = 100, monthly averages)") ylabel(80(10)130)	///
+	xtitle("") xlabel(708(6)743) ///
+	
 
 	graph export "$graphs/parallel_trends_os_`var'.pdf", replace as(pdf)
 }
-
-
-
-
-
-
-
-
 

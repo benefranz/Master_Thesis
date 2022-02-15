@@ -731,6 +731,14 @@ foreach i in 2 5{
 	drop _merge
 }
 
+* Generate medians
+foreach var of varlist within1 within2 within5{
+	egen `var'_median = median(`var')
+	generate comp_`var' = 0
+	replace comp_`var' = 1 if `var' > `var'_median
+	drop `var'_median
+} 
+
 * Save 
 save "$intermediate/06_competition_radius.dta", replace 
 
@@ -750,6 +758,14 @@ sort postal
 
 * Generate within postal
 egen within_postal = count(id), by (postal)
+
+* Generate median
+egen within_postal_median = median(within_postal)
+
+* Generate competition dummy
+generate comp_postal = 0
+replace comp_postal = 1 if within_postal > within_postal_median
+drop within_postal_median
 
 * Save 
 save "$intermediate/06_competition_postal.dta", replace 
@@ -797,7 +813,7 @@ xtset id date
 
 
 *------------------------------------------------------------------------------*
-*-----						1.4 Label and Rename						  -----*
+**#							1.4 Label and Rename							 #**
 *------------------------------------------------------------------------------*
 
 * Rename

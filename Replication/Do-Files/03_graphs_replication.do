@@ -1,5 +1,5 @@
 *------------------------------------------------------------*
-*----				3. GRAPHS AND TABLES				-----*
+*----					3. GRAPHS						-----*
 *------------------------------------------------------------*
 
 graph set window fontface "Garamond"
@@ -7,10 +7,10 @@ graph set window fontface "Garamond"
 use "$final/00_final_weighted_unbalanced.dta", clear
 
 *------------------------------------------------------------------------------*
-*----							3.1 Graphs								  -----*
+**#								3.1 Parallel Trends						  	 #**
 *------------------------------------------------------------------------------*
 
-*-----			 		3.1.1 Parallel Trend Assumption		 			  -----*
+*-----				 		3.1.1 Simple Version			 			  -----*
 
 foreach var of varlist ln_e5 ln_e10 ln_diesel{
 
@@ -35,7 +35,7 @@ foreach var of varlist ln_e5 ln_e10 ln_diesel{
 	restore
 }
 
-
+*-----				 		3.1.1 Complex Version			 			  -----*
 /*
 *** Daily
 
@@ -113,8 +113,9 @@ restore
 }
 */
 
-
-*-----	  3.1.2 Price Plot for Comparison (full and zero pass-through)	  -----*
+*------------------------------------------------------------------------------*
+**#					3.2 Full/Zero Pass-Through Comparison				  	 #**
+*------------------------------------------------------------------------------*
 
 foreach var of varlist e5 e10 diesel{
 	
@@ -134,3 +135,47 @@ foreach var of varlist e5 e10 diesel{
 	restore
 }
 
+
+
+*------------------------------------------------------------------------------*
+**#							3.3 Distributions							  	 #**
+*------------------------------------------------------------------------------*
+
+*-----				 		3.3.1 Price Distributions		 			  -----*
+
+foreach var of varlist e5 e10 diesel{
+	
+	local le5 "E5"
+	local le10 "E10"
+	local ldiesel "Diesel"	
+	
+	twoway kdensity `var', ///
+	lcolor(navy) lwidth(medthick) ///
+	graphregion(color(white)) bgcolor(white) ///
+	ytitle(Kernel Density) ///
+	xtitle("`l`var'' Prices") xlabel(0(0.5)3.5)
+	
+	graph export "$graphs/distr_`var'.pdf", replace as(pdf)
+}
+
+
+
+*-----			 		3.3.2 Competition Distributions		 			  -----*
+
+* Load data
+use "$intermediate/06_competition_radius.dta", clear
+
+* Graph
+foreach var of varlist within1 within2 within5{
+	
+	local lwithin1 "1"
+	local lwithin2 "2"
+	local lwithin5 "5"		
+	
+	twoway histogram `var', fraction ///
+	color(navy) ///
+	graphregion(color(white)) bgcolor(white) ///
+	xtitle("Petrol Stations within `l`var''km")
+
+	graph export "$graphs/distr_`var'.pdf", replace as(pdf)	
+}
