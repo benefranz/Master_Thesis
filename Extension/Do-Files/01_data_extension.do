@@ -5,7 +5,7 @@
 
 
 *------------------------------------------------------------------------------*
-*-----					1.1 Data Download and Reshaping					  -----*
+**#						1.1 Data Download and Reshaping					  	 #**
 *------------------------------------------------------------------------------*
 
 *-----				1.1.1 Tankerkönig Stations (Germany)				  -----*
@@ -134,6 +134,9 @@ bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == ti
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
 replace date = (datehour - hour) / 24
 
+* Drop 01.02.2021
+drop if date==date("01feb2021", "DMY")
+
 * Reformat time
 replace time = dhms(date, hour, 0, 0)
 format time %tc
@@ -158,8 +161,17 @@ gen treat = 1
 gen post = 1
 replace post = 0 if time < clock("01jan2021 00:00:00", "DMYhms")
 
+* Generate country variable
+gen country = "Germany"
+
 * Destring postal
 destring postal, replace
+
+* Correct Latitude/Longitude
+replace latitude = latitude/100000 if id == 8662
+replace longitude = longitude/100000 if id == 8662
+replace longitude = longitude/10 if longitude > 90
+drop if latitude == 0	// missing lat/long values
 
 * Correct postal codes
 replace postal = 01239 if postal == 01275
@@ -172,7 +184,6 @@ replace postal = 25813 if postal == 25875
 replace postal = 27639 if postal == 27637
 replace postal = 28857 if postal == 28875
 replace postal = 29559 if postal == 29596
-replace postal = 32584 if postal == 32484
 replace postal = 35440 if postal == 35446
 replace postal = 49448 if postal == 49889
 replace postal = 51467 if postal == 51247
@@ -183,9 +194,6 @@ replace postal = 73235 if postal == 72335
 replace postal = 86753 if postal == 86763
 replace postal = 97215 if postal == 91215
 replace postal = 94559 if postal == 94595
-replace postal = 98739 if postal == 98739		// Error
-
-replace postal = 35767 if latitude == float(50.6813) & longitude == float(8.148122)
 
 * Sort
 sort id time
@@ -338,11 +346,14 @@ foreach var of varlist diesel e5 e10 {
 }
 
 * Expand data
-bys id (time): gen exp = cond(_n==_N, td(01-08-2020)*24-datehour, datehour[_n+1]-datehour)
+bys id (time): gen exp = cond(_n==_N, td(01-02-2021)*24-datehour, datehour[_n+1]-datehour)
 expand exp
 bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == time[_n-1]
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
 replace date = (datehour - hour) / 24
+
+* Drop 01.02.2021
+drop if date==date("01feb2021", "DMY")
 
 * Reformat time
 replace time = dhms(date, hour, 0, 0)
@@ -368,17 +379,23 @@ gen treat = 0
 gen post = 1
 replace post = 0 if time < clock("01jan2021 00:00:00", "DMYhms")
 
+* Generate country variable
+gen country = "France"
+
+* Destring postal
+destring postal, replace
+
 * Correct postal codes
 replace postal = 04200 if postal == 4204
 replace postal = 06510 if postal == 6770
 replace postal = 13290 if postal == 13546
 replace postal = 13400 if postal == 13783
 replace postal = 13290 if postal == 13853
-replace postal = 20140 if postal == 20156
 replace postal = 30000 if postal == 30021
 replace postal = 31200 if postal == 31075
 replace postal = 31300 if postal == 31076
 replace postal = 31100 if postal == 31084
+replace postal = 33185 if postal == 33187	
 replace postal = 34470 if postal == 34475
 replace postal = 37170 if postal == 37172
 replace postal = 42300 if postal == 42334
@@ -390,7 +407,6 @@ replace postal = 57300 if postal == 57303
 replace postal = 66000 if postal == 66962
 replace postal = 67450 if postal == 67452
 replace postal = 68700 if postal == 68703
-replace postal = 69400 if postal == 69651
 replace postal = 69800 if postal == 69803
 replace postal = 70000 if postal == 70004
 replace postal = 73420 if postal == 73182
@@ -407,6 +423,7 @@ replace postal = 92240 if postal == 92242
 replace postal = 94310 if postal == 94537
 replace postal = 94390 if postal == 94542
 replace postal = 94150 if postal == 94594
+replace postal = 94320 if postal == 94651
 replace postal = 95330 if postal == 95331
 
 * Sort
@@ -512,7 +529,7 @@ foreach i in 2020 2021{
 foreach c in "DE" "FR"{
 	use "$source/Mobility/2020_`c'_Region_Mobility_Report.dta", clear
 	append using "$source/Mobility/2021_`c'_Region_Mobility_Report.dta"
-	save "$source/Mobility/mobility_`c'.dta"
+	save "$source/Mobility/mobility_`c'.dta", replace
 }
 
 
@@ -598,7 +615,7 @@ save "$intermediate/05_germany_postal.dta", replace
 
 
 *------------------------------------------------------------------------------*
-*-----						1.2 Merge and Append						  -----*
+**#							1.2 Merge and Append							 #**
 *------------------------------------------------------------------------------*
 
 *-----			1.2.1 Merge German Data with Attached Street Type		  -----*
@@ -694,7 +711,7 @@ save "$final/merged_weighted.dta", replace
 
 
 *------------------------------------------------------------------------------*
-*-----							1.3 Construction						  -----*
+**#							1.3 Construction/Cleaning						 #**
 *------------------------------------------------------------------------------*
 
 *----- 						1.3.1 Competition by Radius					  -----* 
@@ -703,7 +720,7 @@ save "$final/merged_weighted.dta", replace
 use "$final/merged_weighted.dta", clear
 
 * Reduce sample by id
-keep id latitude longitude
+keep id country latitude longitude
 duplicates drop id, force
 
 * Save
@@ -742,6 +759,14 @@ foreach i in 2 5{
 	drop _merge
 }
 
+* Generate medians
+foreach var of varlist within1 within2 within5{
+	egen `var'_median = median(`var')
+	generate comp_`var' = 0
+	replace comp_`var' = 1 if `var' > `var'_median
+	drop `var'_median
+} 
+
 * Save 
 save "$intermediate/06_competition_radius.dta", replace 
 
@@ -762,6 +787,14 @@ sort postal
 * Generate within postal
 egen within_postal = count(id), by (postal)
 
+* Generate median
+egen within_postal_median = median(within_postal)
+
+* Generate competition dummy
+generate comp_postal = 0
+replace comp_postal = 1 if within_postal > within_postal_median
+drop within_postal_median
+
 * Save 
 save "$intermediate/06_competition_postal.dta", replace 
 
@@ -777,32 +810,49 @@ drop _merge
 
 
 
-*-----	 						1.3.3 Ln Prices							  -----*
+*-----			1.3.3 Generate Treat, Post, and Dif-in-Dif Variable		  -----*
 
-* Load data
-foreach var of varlist diesel e5 e10{
+* Treat
+generate treat = 1
+replace treat = 0 if country == "France"
+
+* Post
+generate post = 1
+replace post = 0 if date < date("01jul2020", "DMY")
+
+* Dif-in-Dif
+generate vat = treat * post 
+
+
+
+*-----	 						1.3.4 Ln Prices							  -----*
+
+foreach var of varlist e5 e10 diesel{
 	gen ln_`var' = ln(`var')
 }
 
 
+*-----	 						1.3.5 Clean Prices							  -----*
 
-*-----				1.3.3 Generate Interaction of Treat and Post		  -----*
-generate vat = treat*post 
+foreach var of varlist e5 e10 diesel{
+	replace `var'=. if `var'<0
+}
+
+foreach var of varlist e5 e10 diesel{
+	replace `var'=. if `var'<0.9
+	replace `var'=. if `var'>2.5
+}
 
 
+*-----	 						1.3.6 Setup Panel						  -----*
 
-*----- 						1.3.4 Drop Duplicates						  -----*
-duplicates drop id date, force
-
-
-
-*-----	 						1.3.5 Setup Panel						  -----*
+duplicates drop
 xtset id date
 
 
 
 *------------------------------------------------------------------------------*
-*-----						1.4 Label and Rename						  -----*
+**#							1.4 Label and Rename							 #**
 *------------------------------------------------------------------------------*
 
 * Rename
@@ -823,7 +873,7 @@ label variable e10 "E10 Price (weighted average for Germany)"
 label variable ln_diesel "Log Diesel Price"
 label variable ln_e5 "Log E5 Price"
 label variable ln_e10 "Log E10 Price"
-label variable retail_recreation "Change in Retail & Recreation Mobility"
+label variable retail_recreation "Change in Retail and Recreation Mobility"
 label variable workplace "Change in Workplace Mobility"
 label variable sub_region_1 "Bundesländer/Départements"
 label variable sub_region_2 "French Regions"
@@ -855,5 +905,17 @@ format date %tdDD_Mon_CCYY
 
 
 * Save
-save "$final/00_final_weighted.dta", replace
+save "$final/00_final_weighted_unbalanced.dta", replace
 
+
+
+*----- 	Drop if Petrol Stations Appear after first Date (Balance Panel)   -----*
+
+bysort id (date): gen N = _N
+bysort id (date): gen n = _n
+
+bysort id (date): egen todrop = max(n==1 & date>date("16dec2020","DMY"))
+drop if todrop == 1
+drop n N todrop
+
+save "$final/00_final_weighted_balanced", replace

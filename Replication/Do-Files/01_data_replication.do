@@ -55,6 +55,8 @@ forvalues ii=15/30{
 	format time %tcDD_Mon_CCYY_HH:MM:SS
 	drop date dieselchange e5change e10change
 
+	foreach var of varlist e5 e10 d
+	
 	gen date = dofc(time)
 	gen hour = hh(time)
 	gen datehour = date*24 + hour
@@ -134,6 +136,9 @@ expand exp
 bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == time[_n-1]
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
 replace date = (datehour - hour) / 24
+
+* Drop 01.08.2020
+drop if date==date("01aug2020", "DMY")
 
 * Reformat time
 replace time = dhms(date, hour, 0, 0)
@@ -230,6 +235,7 @@ replace fueling_behaviour = 0.6 if hour == 22
 foreach var of varlist e5 e10 diesel{
 	bysort id date: asgen `var'_mean = `var', weights(fueling_behaviour)
 }
+
 * Drop unnecessary variables
 drop e5 e10 diesel time hour fueling_behaviour
 
@@ -326,7 +332,7 @@ gen datehour = date*24 + hour
 
 * Replace 0 or missing values with previous prices
 foreach var of varlist e5 e10 diesel {
-    bys id (time): replace `var' = `var'[_n-1] if `var' == 0 | `var' == .
+	bys id (time): replace `var' = `var'[_n-1] if `var' == 0 | `var' == .
 }
 
 * Expand data
@@ -335,6 +341,9 @@ expand exp
 bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == time[_n-1]
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
 replace date = (datehour - hour) / 24
+
+* Drop 01.08.2020
+drop if date==date("01aug2020", "DMY")
 
 * Reformat time
 replace time = dhms(date, hour, 0, 0)
@@ -418,13 +427,21 @@ drop if hour>22
 
 * Set price to price at 17:00 per day and station
 foreach var of varlist e5 e10 diesel {
+	
+	bysort id date: egen `var'_mean = mean(`var')
+	/*
 	bysort id date: generate `var'_17 = `var' if hour==17
-	bysort id date (`var'_17): replace `var'_17 = `var'_17[_n-1] if missing(`var'_17) & _n > 1
+	bysort id date (`var'_17): replace `var'_17 = `var'_17[_n-1] if missing(`var'_17) & _n > 1*/
 }
 drop e5 e10 diesel time hour
+
+rename diesel_mean diesel
+rename e5_mean e5
+rename e10_mean e10
+/*
 rename e5_17 e5
 rename e10_17 e10
-rename diesel_17 diesel
+rename diesel_17 diesel*/
 
 * Collapse data daily
 duplicates drop id date, force
@@ -683,7 +700,7 @@ save "$final/merged_weighted.dta", replace
 
 
 *------------------------------------------------------------------------------*
-**#								1.3 Construction							 #**
+**#							1.3 Construction/Cleaning						 #**
 *------------------------------------------------------------------------------*
 
 *----- 						1.3.1 Competition by Radius					  -----* 
@@ -799,14 +816,25 @@ generate vat = treat * post
 
 *-----	 						1.3.4 Ln Prices							  -----*
 
-* Load data
 foreach var of varlist e5 e10 diesel{
 	gen ln_`var' = ln(`var')
 }
 
 
+*-----	 						1.3.5 Clean Prices							  -----*
+
+foreach var of varlist e5 e10 diesel{
+	replace `var'=. if `var'<0
+}
+
+foreach var of varlist e5 e10 diesel{
+	replace `var'=. if `var'<0.9
+	replace `var'=. if `var'>2.5
+}
+
 
 *-----	 						1.3.6 Setup Panel						  -----*
+
 duplicates drop
 xtset id date
 

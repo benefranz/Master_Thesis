@@ -27,7 +27,7 @@ foreach var of varlist e5 e10 diesel{
 	
 	* Result output
 	esttab using "$tables/reg_`var'_unbalanced.tex", /// 
-	keep(_cons workplace retail_recreation 1.treat#1.post 1.street_type#1.treat#1.post 1.comp_within1#1.treat#1.post) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.4fc)) se(par) ci(par)) nonumbers brackets ///
+	keep(_cons workplace retail_recreation 1.treat#1.post 1.street_type#1.treat#1.post 1.comp_within1#1.treat#1.post) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.6fc)) se(par) ci(par)) nonumbers brackets ///
 	stats(mean N r2,labels("Mean (Pre-reform)" "Observations" "R-squared") fmt(%9.3fc %9.0fc %9.3fc)) ///
 	mtitles("Baseline" "Controls" "Highway (+ Controls)" "Competition (+ Controls)") ///
 	label booktabs replace nogap collabels(none) nonotes
