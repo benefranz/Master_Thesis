@@ -26,7 +26,7 @@ foreach var of varlist ln_e5 ln_e10 ln_diesel{
 	(line `var' date if treat==0 , lcolor(navy) lwidth(medthick)) ///
 	(line `var' date if treat==1 , lcolor(dkorange) lwidth(medthick)), ///
 	legend(label(1 "Control (France)") label(2 "Treatment (Germany)"))	///
-	xline(22097, lcolor(gs8) lpattern(dash))	///
+	xline(22646, lcolor(gs8) lpattern(dash))	///
 	graphregion(color(white)) ///
 	bgcolor(white) xtitle("Dates", height(6))	///
 	ytitle("Ln of `l`var'' Price € per liter" , height(6))
@@ -54,7 +54,7 @@ foreach var of varlist e5 e10 diesel{
 	graphregion(color(white)) bgcolor(white) xtitle("Dates", height(6))  ///
 	ytitle("Price € per liter" , height(6))  ///	
 
-	graph export "$graphs/rep_`var'_germany.pdf", replace as(pdf)
+	graph export "$graphs/ext_`var'_germany.pdf", replace as(pdf)
 	
 	restore
 }
@@ -90,7 +90,7 @@ foreach var of varlist e5 e10 diesel{
 	ytitle(Kernel Density) ///
 	xtitle("`l`var'' Prices") xlabel(0(0.5)3.5)
 	
-	graph export "$graphs/distr_rep_`var'.pdf", replace as(pdf)
+	graph export "$graphs/distr_ext_`var'.pdf", replace as(pdf)
 }
 
 * Graph Boxplot
@@ -104,7 +104,7 @@ foreach var of varlist e5 e10 diesel{
 	graphregion(color(white)) bgcolor(white) ///
 	ytitle("`l`var'' Prices")
 	
-	graph export "$graphs/box_rep_`var'.pdf", replace as(pdf)
+	graph export "$graphs/box_ext_`var'.pdf", replace as(pdf)
 }
 
 
@@ -126,30 +126,5 @@ foreach var of varlist within1 within2 within5{
 	graphregion(color(white)) bgcolor(white) ///
 	xtitle("Petrol Stations within `l`var''km")
 
-	graph export "$graphs/distr_comp_rep_`var'.pdf", replace as(pdf)	
+	graph export "$graphs/distr_comp_ext_`var'.pdf", replace as(pdf)	
 }
-
-
-
-*-----			 		3.3.2 Price Hourly Boxplots		 			  -----*
-
-use "$intermediate/02_france_hourly.dta", clear
-
-gen hour = hh(time)
-
-sort hour
-
-by hour: egen lo = min(diesel)
-by hour: egen hi = max(diesel)
-by hour: egen me = mean(diesel)
-
-keep hour lo hi me
-duplicates drop
-
-twoway connected me hour, xlab(0(1)24)
-
-
-
-
-
-

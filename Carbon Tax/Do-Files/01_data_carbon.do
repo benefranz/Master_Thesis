@@ -14,30 +14,30 @@
 
 forvalues ii=16/31{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/12 Stations/2020-12-`i'-stations.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/12 Stations/2021-12-`i'-stations.csv", varnames(1) encoding("utf-8") clear
 	
-	gen date = date("2020-12-`i'", "YMD")
+	gen date = date("2021-12-`i'", "YMD")
 	rename uuid id
 	rename post_code postal
 	
 	drop openingtimes_json first_active street name brand house_number city
 	
-	save "$source/Stations_Germany/2020-12-`i'-stations.dta", replace
+	save "$source/Stations_Germany/2021-12-`i'-stations.dta", replace
 }
 
 
 * January
 forvalues ii=01/31{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/01 Stations/2021-01-`i'-stations.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/01 Stations/2022-01-`i'-stations.csv", varnames(1) encoding("utf-8") clear
 	
-	gen date = date("2021-01-`i'", "YMD")
+	gen date = date("2022-01-`i'", "YMD")
 	rename uuid id
 	rename post_code postal
 	
 	drop openingtimes_json first_active street name brand house_number city
 	
-	save "$source/Stations_Germany/2021-01-`i'-stations.dta", replace
+	save "$source/Stations_Germany/2022-01-`i'-stations.dta", replace
 }
 
 
@@ -47,7 +47,7 @@ forvalues ii=01/31{
 * December
 forvalues ii=16/31{
 	local i : di %02.0f `ii'	
-	import delimited "$data_in/12 Prices/2020-12-`i'-prices.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/12 Prices/2021-12-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
 	rename station_uuid id
 	
@@ -59,13 +59,13 @@ forvalues ii=16/31{
 	gen hour = hh(time)
 	gen datehour = date*24 + hour
 	
-	save "$source/Prices_Germany/2020-12-`i'-prices.dta", replace
+	save "$source/Prices_Germany/2021-12-`i'-prices.dta", replace
 }
 
 * January
 forvalues ii=01/31{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/01 Prices/2021-01-`i'-prices.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/01 Prices/2022-01-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
 	rename station_uuid id
 	
@@ -77,44 +77,44 @@ forvalues ii=01/31{
 	gen hour = hh(time)
 	gen datehour = date*24 + hour
 	
-	save "$source/Prices_Germany/2021-01-`i'-prices.dta", replace
+	save "$source/Prices_Germany/2022-01-`i'-prices.dta", replace
 }
 
 * Merge prices with information stations (December)
 forvalues ii=16/31{
 	local i : di %02.0f `ii'
-	use "$source/Prices_Germany/2020-12-`i'-prices.dta", clear
+	use "$source/Prices_Germany/2021-12-`i'-prices.dta", clear
 	
-	merge m:1 id date using "$source/Stations_Germany/2020-12-`i'-stations.dta"
+	merge m:1 id date using "$source/Stations_Germany/2021-12-`i'-stations.dta"
 	
 	keep if _merge == 3
 	drop _merge
 	
-	save "$source/Merged_Germany/2020-12-`i'-merged.dta", replace
+	save "$source/Merged_Germany/2021-12-`i'-merged.dta", replace
 }
 
 * Merge prices with information stations (January)
 forvalues ii=01/31{
 	local i : di %02.0f `ii'
-	use "$source/Prices_Germany/2021-01-`i'-prices.dta", clear
+	use "$source/Prices_Germany/2022-01-`i'-prices.dta", clear
 	
-	merge m:1 id date using "$source/Stations_Germany/2021-01-`i'-stations.dta"
+	merge m:1 id date using "$source/Stations_Germany/2022-01-`i'-stations.dta"
 	
 	keep if _merge == 3
 	drop _merge
 	
-	save "$source/Merged_Germany/2021-01-`i'-merged.dta", replace
+	save "$source/Merged_Germany/2022-01-`i'-merged.dta", replace
 }
 
 * Apend Data
-use "$source/Merged_Germany/2020-12-16-merged.dta", clear
+use "$source/Merged_Germany/2021-12-16-merged.dta", clear
 forvalues mm = 17/31 {
 	local m : di %02.0f `mm'	
-	append using "$source/Merged_Germany/2020-12-`m'-merged.dta"
+	append using "$source/Merged_Germany/2021-12-`m'-merged.dta"
 }
 forvalues oo = 01/31{ 
 	local o : di %02.0f `oo'	
-	cap append using "$source/Merged_Germany/2021-01-`o'-merged.dta"
+	cap append using "$source/Merged_Germany/2022-01-`o'-merged.dta"
 }
 
 * Create numeric ID based on non-numeric ID
@@ -128,14 +128,14 @@ foreach var of varlist diesel e5 e10 {
 }
 
 * Expand data
-bys id (time): gen exp = cond(_n==_N, td(01-02-2021)*24-datehour, datehour[_n+1]-datehour)
+bys id (time): gen exp = cond(_n==_N, td(01-02-2022)*24-datehour, datehour[_n+1]-datehour)
 expand exp
 bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == time[_n-1]
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
 replace date = (datehour - hour) / 24
 
-* Drop 01.02.2021
-drop if date==date("01feb2021", "DMY")
+* Drop 01.02.2022
+drop if date==date("01feb2022", "DMY")
 
 * Reformat time
 replace time = dhms(date, hour, 0, 0)
@@ -161,30 +161,28 @@ gen country = "Germany"
 destring postal, replace
 
 * Correct Latitude/Longitude
-replace latitude = latitude/100000 if id == 8662
-replace longitude = longitude/100000 if id == 8662
 replace longitude = longitude/10 if longitude > 90
 drop if latitude == 0	// missing lat/long values
 
 * Correct postal codes
-replace postal = 01239 if postal == 01275
 replace postal = 06711 if postal == 06727
 replace postal = 06905 if postal == 06909
-replace postal = 07333 if postal == 07334
 replace postal = 09557 if postal == 09537
-replace postal = 24955 if postal == 24952
-replace postal = 25813 if postal == 25875
+replace postal = 14712 if postal == 14721
+replace postal = 23554 if postal == 23354
 replace postal = 27639 if postal == 27637
 replace postal = 28857 if postal == 28875
 replace postal = 29559 if postal == 29596
 replace postal = 35440 if postal == 35446
 replace postal = 49448 if postal == 49889
-replace postal = 51467 if postal == 51247
 replace postal = 59368 if postal == 59386
+replace postal = 65760 if postal == 65767
 replace postal = 65205 if postal == 66205
 replace postal = 67480 if postal == 67440
 replace postal = 73235 if postal == 72335
+replace postal = 89355 if postal == 86355
 replace postal = 86753 if postal == 86763
+replace postal = 90765 if postal == 90785
 replace postal = 97215 if postal == 91215
 replace postal = 94559 if postal == 94595
 
@@ -278,16 +276,16 @@ save "$intermediate/01_germany_daily.dta", replace
 *-----			 	  1.1.3 Le Prix Des Carburants (France)		   		  -----*
 
 * Load data
-import delimited "$data_in/PrixCarburants_annuel_2021.csv", numericcols(9) encoding("utf-8") clear
+import delimited "$data_in/PrixCarburants_annuel_2022.csv", numericcols(9) encoding("utf-8") clear
 
 * Save
-save "$source/PrixCarburants_annuel_2021.dta", replace
+save "$source/PrixCarburants_annuel_2022.dta", replace
 
 * Load data
-import delimited "$data_in/PrixCarburants_annuel_2020.csv", numericcols(9) encoding("utf-8") clear
+import delimited "$data_in/PrixCarburants_annuel_2021.csv", numericcols(9) encoding("utf-8") clear
 
 * Append
-append using "$source/PrixCarburants_annuel_2021.dta"
+append using "$source/PrixCarburants_annuel_2022.dta"
 
 * Rename variables
 rename v1 id
@@ -312,8 +310,8 @@ drop v6
 drop id_fuel
 drop if fuel == "E85"
 drop if fuel == "GPLc"
-drop if time < clock("2020-12-16 00:00:00", "YMDhms")
-drop if time > clock("2021-01-31 23:59:59", "YMDhms")
+drop if time < clock("2021-12-16 00:00:00", "YMDhms")
+drop if time > clock("2022-01-31 23:59:59", "YMDhms")
 
 * Convert to euros
 replace price = price/1000
@@ -339,14 +337,14 @@ foreach var of varlist diesel e5 e10 {
 }
 
 * Expand data
-bys id (time): gen exp = cond(_n==_N, td(01-02-2021)*24-datehour, datehour[_n+1]-datehour)
+bys id (time): gen exp = cond(_n==_N, td(01-02-2022)*24-datehour, datehour[_n+1]-datehour)
 expand exp
 bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == time[_n-1]
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
 replace date = (datehour - hour) / 24
 
-* Drop 01.02.2021
-drop if date==date("01feb2021", "DMY")
+* Drop 01.02.2022
+drop if date==date("01feb2022", "DMY")
 
 * Reformat time
 replace time = dhms(date, hour, 0, 0)
@@ -373,6 +371,7 @@ destring postal, replace
 
 * Correct postal codes
 replace postal = 04200 if postal == 4204
+replace postal = 06340 if postal == 6345
 replace postal = 06510 if postal == 6770
 replace postal = 13290 if postal == 13546
 replace postal = 13400 if postal == 13783
@@ -393,6 +392,7 @@ replace postal = 57300 if postal == 57303
 replace postal = 66000 if postal == 66962
 replace postal = 67450 if postal == 67452
 replace postal = 68700 if postal == 68703
+replace postal = 69400 if postal == 69651
 replace postal = 69800 if postal == 69803
 replace postal = 70000 if postal == 70004
 replace postal = 73420 if postal == 73182
@@ -402,8 +402,6 @@ replace postal = 78200 if postal == 78205
 replace postal = 80080 if postal == 80046
 replace postal = 80800 if postal == 80380
 replace postal = 84000 if postal == 84097
-replace postal = 85300 if postal == 85306
-replace postal = 85800 if postal == 85804
 replace postal = 89340 if postal == 89720
 replace postal = 92240 if postal == 92242
 replace postal = 94310 if postal == 94537
@@ -482,7 +480,7 @@ save "$intermediate/03_germany_streettype.dta", replace
 * Load data
 foreach c in "DE" "FR"{
 		
-	foreach i in 2020 2021{
+	foreach i in 2021 2022{
 		
 		import delimited "$data_in/`i'_`c'_Region_Mobility_Report", encoding("utf-8") clear
 		
@@ -498,7 +496,7 @@ foreach c in "DE" "FR"{
 
 
 * Rename some name in sub_region_2 for merge
-foreach i in 2020 2021{
+foreach i in 2021 2022{
 	use "$source/Mobility/`i'_FR_Region_Mobility_Report.dta", clear
 	replace sub_region_2="Ariège" if sub_region_2=="Ariege"
 	replace sub_region_2="Bouches-du-Rhône" if sub_region_2=="Bouches-du-Rhone"
@@ -513,8 +511,8 @@ foreach i in 2020 2021{
 
 * Append
 foreach c in "DE" "FR"{
-	use "$source/Mobility/2020_`c'_Region_Mobility_Report.dta", clear
-	append using "$source/Mobility/2021_`c'_Region_Mobility_Report.dta"
+	use "$source/Mobility/2021_`c'_Region_Mobility_Report.dta", clear
+	append using "$source/Mobility/2022_`c'_Region_Mobility_Report.dta"
 	save "$source/Mobility/mobility_`c'.dta", replace
 }
 
@@ -804,7 +802,7 @@ replace treat = 0 if country == "France"
 
 * Post
 generate post = 1
-replace post = 0 if date < date("01jan2021", "DMY")
+replace post = 0 if date < date("01jan2022", "DMY")
 
 * Dif-in-Dif
 generate vat = treat * post 
@@ -915,7 +913,7 @@ save "$final/00_final_weighted_unbalanced.dta", replace
 bysort id (date): gen N = _N
 bysort id (date): gen n = _n
 
-bysort id (date): egen todrop = max(n==1 & date>date("16dec2020","DMY"))
+bysort id (date): egen todrop = max(n==1 & date>date("16dec2021","DMY"))
 drop if todrop == 1
 drop n N todrop
 

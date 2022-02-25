@@ -1,0 +1,31 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{4}{c}}
+\toprule
+                    &\multicolumn{1}{c}{Baseline}&\multicolumn{1}{c}{Controls}&\multicolumn{1}{c}{Highway (+ Controls)}&\multicolumn{1}{c}{Competition (+ Controls)}\\
+\midrule
+Treatment Group (Germany) $\times$ Post Reform&   -0.011693\sym{***}&   -0.011489\sym{***}&   -0.011165\sym{***}&   -0.011744\sym{***}\\
+                    &  (0.000205)         &  (0.000210)         &  (0.000222)         &  (0.000277)         \\
+                    &[-0.012096,-0.011291]         &[-0.011901,-0.011077]         &[-0.011601,-0.010730]         &[-0.012286,-0.011202]         \\
+Change in Retail and Recreation Mobility&                     &    0.000072\sym{***}&    0.000071\sym{***}&    0.000072\sym{***}\\
+                    &                     &  (0.000005)         &  (0.000005)         &  (0.000005)         \\
+                    &                     &[0.000063,0.000081]         &[0.000062,0.000080]         &[0.000063,0.000081]         \\
+Change in Workplace Mobility&                     &    0.000089\sym{***}&    0.000088\sym{***}&    0.000089\sym{***}\\
+                    &                     &  (0.000006)         &  (0.000006)         &  (0.000006)         \\
+                    &                     &[0.000077,0.000100]         &[0.000077,0.000100]         &[0.000077,0.000100]         \\
+Highway $\times$ Treatment Group (Germany) $\times$ Post Reform&                     &                     &   -0.000765         &                     \\
+                    &                     &                     &  (0.001642)         &                     \\
+                    &                     &                     &[-0.003983,0.002454]         &                     \\
+High Competition $\times$ Treatment Group (Germany) $\times$ Post Reform&                     &                     &                     &    0.000401         \\
+                    &                     &                     &                     &  (0.000437)         \\
+                    &                     &                     &                     &[-0.000455,0.001258]         \\
+Constant            &    0.231944\sym{***}&    0.234642\sym{***}&    0.234513\sym{***}&    0.234645\sym{***}\\
+                    &  (0.000151)         &  (0.000200)         &  (0.000392)         &  (0.000200)         \\
+                    &[0.231648,0.232240]         &[0.234250,0.235034]         &[0.233744,0.235283]         &[0.234253,0.235037]         \\
+\midrule
+Pass-Through (in \%)&       46.40         &       45.59         &       44.31         &       46.60         \\
+Observations        &     862,269         &     862,185         &     862,185         &     862,185         \\
+R-squared           &      0.9084         &      0.9086         &      0.9086         &      0.9086         \\
+\bottomrule
+\end{tabular}
+}

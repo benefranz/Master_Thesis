@@ -1,0 +1,31 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{4}{c}}
+\toprule
+                    &\multicolumn{1}{c}{Baseline}&\multicolumn{1}{c}{Controls}&\multicolumn{1}{c}{Highway (+ Controls)}&\multicolumn{1}{c}{Competition (+ Controls)}\\
+\midrule
+Treatment Group (Germany) $\times$ Post Reform&    0.049290\sym{***}&    0.050150\sym{***}&    0.050618\sym{***}&    0.049853\sym{***}\\
+                    &  (0.000229)         &  (0.000241)         &  (0.000247)         &  (0.000301)         \\
+                    &[0.048842,0.049739]         &[0.049678,0.050623]         &[0.050133,0.051102]         &[0.049263,0.050443]         \\
+Change in Retail and Recreation Mobility&                     &   -0.000059\sym{***}&   -0.000058\sym{***}&   -0.000059\sym{***}\\
+                    &                     &  (0.000004)         &  (0.000004)         &  (0.000004)         \\
+                    &                     &[-0.000068,-0.000051]         &[-0.000067,-0.000050]         &[-0.000068,-0.000051]         \\
+Change in Workplace Mobility&                     &    0.000019\sym{***}&    0.000019\sym{***}&    0.000019\sym{***}\\
+                    &                     &  (0.000005)         &  (0.000005)         &  (0.000005)         \\
+                    &                     &[0.000009,0.000030]         &[0.000008,0.000029]         &[0.000009,0.000030]         \\
+Highway $\times$ Treatment Group (Germany) $\times$ Post Reform&                     &                     &    0.008651\sym{**} &                     \\
+                    &                     &                     &  (0.004033)         &                     \\
+                    &                     &                     &[0.000745,0.016556]         &                     \\
+comp\_within1=1 $\times$ Treatment Group (Germany) $\times$ Post Reform&                     &                     &                     &    0.000828\sym{*}  \\
+                    &                     &                     &                     &  (0.000463)         \\
+                    &                     &                     &                     &[-0.000079,0.001736]         \\
+Constant            &    0.234220\sym{***}&    0.232043\sym{***}&    0.234210\sym{***}&    0.232047\sym{***}\\
+                    &  (0.000135)         &  (0.000215)         &  (0.002231)         &  (0.000215)         \\
+                    &[0.233955,0.234485]         &[0.231621,0.232466]         &[0.229836,0.238583]         &[0.231625,0.232470]         \\
+\midrule
+Mean (Pre-reform)   &                     &                     &                     &           .         \\
+Observations        &     856,547         &     856,440         &     856,440         &     856,440         \\
+R-squared           &       0.936         &       0.936         &       0.936         &       0.936         \\
+\bottomrule
+\end{tabular}
+}

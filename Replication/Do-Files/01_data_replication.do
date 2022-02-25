@@ -814,13 +814,6 @@ generate vat = treat * post
 
 
 
-*-----	 						1.3.4 Ln Prices							  -----*
-
-foreach var of varlist e5 e10 diesel{
-	gen ln_`var' = ln(`var')
-}
-
-
 *-----	 						1.3.5 Clean Prices							  -----*
 
 foreach var of varlist e5 e10 diesel{
@@ -831,6 +824,14 @@ foreach var of varlist e5 e10 diesel{
 	replace `var'=. if `var'<0.9
 	replace `var'=. if `var'>2.5
 }
+
+
+*-----	 						1.3.4 Ln Prices							  -----*
+
+foreach var of varlist e5 e10 diesel{
+	gen ln_`var' = ln(`var')
+}
+
 
 
 *-----	 						1.3.6 Setup Panel						  -----*
@@ -872,6 +873,7 @@ label variable within2 "Petrol Stations within 2km"
 label variable within5 "Petrol Stations within 5km"
 label variable within_postal "Petrol Stations within Postal Code"
 label variable vat "Dif-in-Dif Dummy"
+label variable country "Countries"
 
 
 
@@ -879,12 +881,24 @@ label variable vat "Dif-in-Dif Dummy"
 label variable treat "Treatment Dummy (1 for Germany)"
 label define treatl 1 "Treatment Group (Germany)" 0 "Control Group (France)"
 label values treat treatl
-label variable post "Post Reform Dummy (1 after 30.06.2020)"
+label variable post "Post Reform Dummy (1 after 31.12.2021)"
 label define postl 1 "Post Reform" 0 "Before Reform"
 label values post postl
 label variable street_type "Type of Attached Street (Highway or Normal Street)"
 label define stl 1 "Highway" 0 "Normal Street"
 label values street_type stl
+label variable comp_within1 "Degree of Competition within 1km"
+label define c1l 1 "Above Median" 0 "Below Median"
+label values comp_within1 c1l
+label variable comp_within2 "Degree of Competition within 2km"
+label define c2l 1 "Above Median" 0 "Below Median"
+label values comp_within2 c2l
+label variable comp_within5 "Degree of Competition within 5km"
+label define c5l 1 "Above Median" 0 "Below Median"
+label values comp_within1 c5l
+label variable comp_postal "Degree of Competition within 5km"
+label define cpl 1 "Above Median" 0 "Below Median"
+label values comp_postal cpl
 
 
 

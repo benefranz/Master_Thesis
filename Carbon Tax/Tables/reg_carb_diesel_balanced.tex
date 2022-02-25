@@ -1,0 +1,28 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{3}{c}}
+\toprule
+                    &\multicolumn{1}{c}{Baseline}&\multicolumn{1}{c}{Controls}&\multicolumn{1}{c}{Highway (+ Controls)}\\
+\midrule
+Treatment Group (Germany) $\times$ Post Reform&     -0.0095\sym{***}&     -0.0090\sym{***}&     -0.0100\sym{***}\\
+                    &    (0.0002)         &    (0.0002)         &    (0.0002)         \\
+                    &[-0.0100,-0.0091]         &[-0.0095,-0.0085]         &[-0.0105,-0.0095]         \\
+Change in Retail and Recreation Mobility&                     &     -0.0000\sym{***}&     -0.0000\sym{***}\\
+                    &                     &    (0.0000)         &    (0.0000)         \\
+                    &                     &[-0.0000,-0.0000]         &[-0.0000,-0.0000]         \\
+Change in Workplace Mobility&                     &     -0.0001\sym{***}&     -0.0001\sym{***}\\
+                    &                     &    (0.0000)         &    (0.0000)         \\
+                    &                     &[-0.0001,-0.0001]         &[-0.0001,-0.0001]         \\
+Highway $\times$ Treatment Group (Germany) $\times$ Post Reform&                     &                     &      0.0127\sym{***}\\
+                    &                     &                     &    (0.0009)         \\
+                    &                     &                     &[0.0109,0.0144]         \\
+Constant            &      0.4103\sym{***}&      0.4089\sym{***}&      0.4077\sym{***}\\
+                    &    (0.0001)         &    (0.0001)         &    (0.0006)         \\
+                    &[0.4101,0.4104]         &[0.4087,0.4091]         &[0.4065,0.4089]         \\
+\midrule
+Mean (Pre-reform)   &                     &                     &       1.508         \\
+Observations        &     821,430         &     821,430         &     821,430         \\
+R-squared           &       0.929         &       0.930         &       0.930         \\
+\bottomrule
+\end{tabular}
+}
