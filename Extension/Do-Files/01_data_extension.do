@@ -886,16 +886,16 @@ label variable street_type "Type of Attached Street (Highway or Normal Street)"
 label define stl 1 "Highway" 0 "Normal Street"
 label values street_type stl
 label variable comp_within1 "Degree of Competition within 1km"
-label define c1l 1 "Above Median" 0 "Below Median"
+label define c1l 1 "High Competition" 0 "Low Competition"
 label values comp_within1 c1l
 label variable comp_within2 "Degree of Competition within 2km"
-label define c2l 1 "Above Median" 0 "Below Median"
+label define c2l 1 "High Competition" 0 "Low Competition"
 label values comp_within2 c2l
 label variable comp_within5 "Degree of Competition within 5km"
-label define c5l 1 "Above Median" 0 "Below Median"
+label define c5l 1 "High Competition" 0 "Low Competition"
 label values comp_within1 c5l
 label variable comp_postal "Degree of Competition within 5km"
-label define cpl 1 "Above Median" 0 "Below Median"
+label define cpl 1 "High Competition" 0 "Low Competition"
 label values comp_postal cpl
 
 

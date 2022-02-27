@@ -208,7 +208,7 @@ append using "$intermediate/99_germany_2021_daily.dta"
 tsset date treat
 format date %td
 sort treat date
-
+/*
 * C02 tax
 replace diesel = diesel - 0.08 if treat==1 & date>=date("01jan2021","DMY")
 replace e5 = e5 - 0.07 if treat==1 & date>=date("01jan2021","DMY")
