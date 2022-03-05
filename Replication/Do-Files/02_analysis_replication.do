@@ -82,25 +82,25 @@ eststo clear
 
 * Germany before
 eststo gb: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace within1 within2 within5 within_postal if treat == 1 & post == 0
+e5 e10 diesel retail_recreation workplace street_type within1 within2 within5 within_postal if treat == 1 & post == 0
 count if nvals & treat==1 & post==0
 estadd scalar station = r(N)
 
 * Germany after
 eststo ga: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace within1 within2 within5 within_postal if treat == 1 & post == 1
+e5 e10 diesel retail_recreation workplace street_type within1 within2 within5 within_postal if treat == 1 & post == 1
 count if nvals & treat==1 & post==1
 estadd scalar station = r(N)
 
 * France before
 eststo fb: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace within1 within2 within5 within_postal if treat == 0 & post == 0
+e5 e10 diesel retail_recreation workplace street_type within1 within2 within5 within_postal if treat == 0 & post == 0
 count if nvals & treat==0 & post==0
 estadd scalar station = r(N)
 
 * France after
 eststo fa: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace within1 within2 within5 within_postal if treat == 0 & post == 1
+e5 e10 diesel retail_recreation workplace street_type within1 within2 within5 within_postal if treat == 0 & post == 1
 count if nvals & treat==0 & post==1
 estadd scalar station = r(N)
 
@@ -121,5 +121,3 @@ collabels(none)
 
 * Drop
 drop nvals
-
-
