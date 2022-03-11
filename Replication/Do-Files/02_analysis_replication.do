@@ -22,14 +22,14 @@ foreach var of varlist e5 e10 diesel{
 	estadd scalar pt = _b[1.treat#1.post]/(-0.03/1.19)*100
 	eststo controls_ln_`var': quietly areg ln_`var' i.date 1.treat#1.post retail_recreation workplace, cluster(id) a(id)
 	estadd scalar pt = _b[1.treat#1.post]/(-0.03/1.19)*100
-	eststo autobahn_ln_`var': quietly areg ln_`var' i.street_type##i.treat##i.post retail_recreation workplace i.date, absorb(id) cluster(id)
+	eststo autobahn_ln_`var': quietly areg ln_`var' i.highway##i.treat##i.post retail_recreation workplace i.date, absorb(id) cluster(id)
 	estadd scalar pt = _b[1.treat#1.post]/(-0.03/1.19)*100
 	eststo comp1_ln_`var': quietly areg ln_`var' i.comp_within1##i.treat##i.post retail_recreation workplace i.date, absorb(id) cluster(id)
 	estadd scalar pt = _b[1.treat#1.post]/(-0.03/1.19)*100
 	
 	* Result output
 	esttab using "$tables/reg_rep_`var'_unbalanced.tex", /// 
-	keep(_cons workplace retail_recreation 1.treat#1.post 1.street_type#1.treat#1.post 1.comp_within1#1.treat#1.post) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.6fc)) se(par) ci(par)) nonumbers brackets ///
+	keep(_cons workplace retail_recreation 1.treat#1.post 1.highway#1.treat#1.post 1.comp_within1#1.treat#1.post) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.6fc)) se(par) ci(par)) nonumbers brackets ///
 	stats(pt N r2,labels("Pass-Through (in \%)" "Observations" "R-squared") fmt(%9.2fc %9.0fc %9.4fc)) ///
 	mtitles("Baseline" "Controls" "Highway (+ Controls)" "Competition (+ Controls)") ///
 	label booktabs replace nogap collabels(none) nonotes
@@ -50,14 +50,14 @@ foreach var of varlist e5 e10 diesel{
 	estadd scalar pt = _b[1.treat#1.post]/(-0.03/1.19)*100
 	eststo controls_ln_`var': quietly areg ln_`var' i.date 1.treat#1.post retail_recreation workplace, cluster(id) a(id)
 	estadd scalar pt = _b[1.treat#1.post]/(-0.03/1.19)*100
-	eststo autobahn_ln_`var': quietly areg ln_`var' i.street_type##i.treat##i.post retail_recreation workplace i.date, absorb(id) cluster(id)
+	eststo autobahn_ln_`var': quietly areg ln_`var' i.highway##i.treat##i.post retail_recreation workplace i.date, absorb(id) cluster(id)
 	estadd scalar pt = _b[1.treat#1.post]/(-0.03/1.19)*100
 	eststo comp1_ln_`var': quietly areg ln_`var' i.comp_within1##i.treat##i.post retail_recreation workplace i.date, absorb(id) cluster(id)
 	estadd scalar pt = _b[1.treat#1.post]/(-0.03/1.19)*100
 	
 	* Result output
 	esttab using "$tables/reg_rep_`var'_balanced.tex", /// 
-	keep(_cons workplace retail_recreation 1.treat#1.post 1.street_type#1.treat#1.post 1.comp_within1#1.treat#1.post) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.6fc)) se(par) ci(par)) nonumbers brackets ///
+	keep(_cons workplace retail_recreation 1.treat#1.post 1.highway#1.treat#1.post 1.comp_within1#1.treat#1.post) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.6fc)) se(par) ci(par)) nonumbers brackets ///
 	stats(pt N r2,labels("Pass-Through (in \%)" "Observations" "R-squared") fmt(%9.2fc %9.0fc %9.4fc)) ///
 	mtitles("Baseline" "Controls" "Highway (+ Controls)" "Competition (+ Controls)") ///
 	label booktabs replace nogap collabels(none) nonotes
@@ -82,25 +82,25 @@ eststo clear
 
 * Germany before
 eststo gb: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace street_type within1 within2 within5 within_postal if treat == 1 & post == 0
+e5 e10 diesel retail_recreation workplace highway within1 within2 within5 within_postal if treat == 1 & post == 0
 count if nvals & treat==1 & post==0
 estadd scalar station = r(N)
 
 * Germany after
 eststo ga: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace street_type within1 within2 within5 within_postal if treat == 1 & post == 1
+e5 e10 diesel retail_recreation workplace highway within1 within2 within5 within_postal if treat == 1 & post == 1
 count if nvals & treat==1 & post==1
 estadd scalar station = r(N)
 
 * France before
 eststo fb: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace street_type within1 within2 within5 within_postal if treat == 0 & post == 0
+e5 e10 diesel retail_recreation workplace highway within1 within2 within5 within_postal if treat == 0 & post == 0
 count if nvals & treat==0 & post==0
 estadd scalar station = r(N)
 
 * France after
 eststo fa: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace street_type within1 within2 within5 within_postal if treat == 0 & post == 1
+e5 e10 diesel retail_recreation workplace highway within1 within2 within5 within_postal if treat == 0 & post == 1
 count if nvals & treat==0 & post==1
 estadd scalar station = r(N)
 

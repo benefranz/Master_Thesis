@@ -93,20 +93,6 @@ foreach var of varlist e5 e10 diesel{
 	graph export "$graphs/distr_rep_`var'.pdf", replace as(pdf)
 }
 
-* Graph Boxplot
-foreach var of varlist e5 e10 diesel{
-	
-	local le5 "E5"
-	local le10 "E10"
-	local ldiesel "Diesel"	
-	
-	graph box `var', over(country) ///
-	graphregion(color(white)) bgcolor(white) ///
-	ytitle("`l`var'' Prices")
-	
-	graph export "$graphs/box_rep_`var'.pdf", replace as(pdf)
-}
-
 
 
 *-----			 		3.3.2 Competition Distributions		 			  -----*

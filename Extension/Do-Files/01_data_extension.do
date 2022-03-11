@@ -122,6 +122,11 @@ egen id_new = group(id)
 drop id
 rename id_new id
 
+* Negative prices to missing
+foreach var of varlist e5 e10 diesel{
+	replace `var'=. if `var'<0
+}
+
 * Replace 0 or missing values with previous prices
 foreach var of varlist diesel e5 e10 {
     bys id (time): replace `var' = `var'[_n-1] if `var' == 0 | `var' == .
@@ -299,8 +304,8 @@ rename v8 fuel
 rename v9 price
 
 * Street Type to Dummy
-gen street_type = 0
-replace street_type = 1 if v3 == "A"
+gen highway = 0
+replace highway = 1 if v3 == "A"
 drop v3
 
 * Format date
@@ -332,6 +337,11 @@ replace longitude = longitude/100000
 gen date = dofc(time)
 gen hour = hh(time)
 gen datehour = date*24 + hour
+
+* Negative prices to missing
+foreach var of varlist e5 e10 diesel{
+	replace `var'=. if `var'<0
+}
 
 * Replace 0 or missing values with previous prices
 foreach var of varlist diesel e5 e10 {
@@ -617,8 +627,8 @@ drop if _merge==2
 drop longitude_merge latitude_merge _merge
 
 * Street Type to Dummy
-gen street_type = 0
-replace street_type = 1 if B == "Autobahn"
+gen highway = 0
+replace highway = 1 if B == "Autobahn"
 drop B
 
 
@@ -725,7 +735,7 @@ foreach i in 1 2 5{
 	
 	preserve
 	
-	geonear id latitude longitude using "$source/Competition/competition_using.dta", n(id2 latitude longitude) within(`i') long
+	geonear id latitude longitude using "$source/Competition/competition_using.dta", n(id2 latitude longitude) within(`i') long ignoreself
 	bysort id (id2): egen within`i' = total(km_to_id2 <= `i')	
 	
 	drop id2 km_to_id2
@@ -801,26 +811,17 @@ drop _merge
 * Treat
 generate treat = 1
 replace treat = 0 if country == "France"
+drop country
 
 * Post
 generate post = 1
 replace post = 0 if date < date("01jan2021", "DMY")
 
-* Dif-in-Dif
-generate vat = treat * post 
 
 
+*-----	 						1.3.5 Winsorize							  -----*
 
-*-----	 						1.3.4 Clean Prices							  -----*
-
-foreach var of varlist e5 e10 diesel{
-	replace `var'=. if `var'<0
-}
-
-foreach var of varlist e5 e10 diesel{
-	replace `var'=. if `var'<0.9
-	replace `var'=. if `var'>2.5
-}
+winsor2 e5 e10 diesel, cuts(0.1 99.9) replace
 
 
 
@@ -861,8 +862,8 @@ label variable e10 "E10 Price (weighted average for Germany)"
 label variable ln_diesel "Log Diesel Price"
 label variable ln_e5 "Log E5 Price"
 label variable ln_e10 "Log E10 Price"
-label variable retail_recreation "Change in Retail and Recreation Mobility"
-label variable workplace "Change in Workplace Mobility"
+label variable retail_recreation "Retail and Recreation Mobility"
+label variable workplace "Workplace Mobility"
 label variable sub_region_1 "Bundesländer/Départements"
 label variable sub_region_2 "French Regions"
 label variable iso_3166_2_code "ISO 3166-2 Code"
@@ -870,8 +871,6 @@ label variable within1 "Petrol Stations within 1km"
 label variable within2 "Petrol Stations within 2km"
 label variable within5 "Petrol Stations within 5km"
 label variable within_postal "Petrol Stations within Postal Code"
-label variable vat "Dif-in-Dif Dummy"
-label variable country "Countries"
 
 
 
@@ -879,12 +878,12 @@ label variable country "Countries"
 label variable treat "Treatment Dummy (1 for Germany)"
 label define treatl 1 "Treatment Group (Germany)" 0 "Control Group (France)"
 label values treat treatl
-label variable post "Post Reform Dummy (1 after 31.12.2021)"
+label variable post "Post Reform Dummy (1 after 31.12.2020)"
 label define postl 1 "Post Reform" 0 "Before Reform"
 label values post postl
-label variable street_type "Type of Attached Street (Highway or Normal Street)"
+label variable highway "Highway"
 label define stl 1 "Highway" 0 "Normal Street"
-label values street_type stl
+label values highway stl
 label variable comp_within1 "Degree of Competition within 1km"
 label define c1l 1 "High Competition" 0 "Low Competition"
 label values comp_within1 c1l

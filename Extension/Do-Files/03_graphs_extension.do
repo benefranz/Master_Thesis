@@ -82,8 +82,8 @@ foreach var of varlist e5 e10 diesel{
 	local le10 "E10"
 	local ldiesel "Diesel"	
 	
-	twoway (kdensity `var' if country=="France", lcolor(navy) lwidth(medthick)) ///
-	(kdensity `var' if country=="Germany", lcolor(dkorange) lwidth(medthick)), ///
+	twoway (kdensity `var' if treat == 0, lcolor(navy) lwidth(medthick)) ///
+	(kdensity `var' if treat == 1, lcolor(dkorange) lwidth(medthick)), ///
 	legend(label(1 "Control (France)") label(2 "Treatment (Germany)")) ///	
 	/*lcolor(navy) lwidth(medthick)*/ ///
 	graphregion(color(white)) bgcolor(white) ///
@@ -91,20 +91,6 @@ foreach var of varlist e5 e10 diesel{
 	xtitle("`l`var'' Prices") xlabel(0(0.5)3.5)
 	
 	graph export "$graphs/distr_ext_`var'.pdf", replace as(pdf)
-}
-
-* Graph Boxplot
-foreach var of varlist e5 e10 diesel{
-	
-	local le5 "E5"
-	local le10 "E10"
-	local ldiesel "Diesel"	
-	
-	graph box `var', over(country) ///
-	graphregion(color(white)) bgcolor(white) ///
-	ytitle("`l`var'' Prices")
-	
-	graph export "$graphs/box_ext_`var'.pdf", replace as(pdf)
 }
 
 

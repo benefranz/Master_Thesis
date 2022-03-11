@@ -54,8 +54,6 @@ forvalues ii=15/30{
 	gen double time = clock(date, "YMDhms#")
 	format time %tcDD_Mon_CCYY_HH:MM:SS
 	drop date dieselchange e5change e10change
-
-	foreach var of varlist e5 e10 d
 	
 	gen date = dofc(time)
 	gen hour = hh(time)
@@ -124,6 +122,11 @@ sort id date
 egen id_new = group(id)
 drop id
 rename id_new id
+
+* Negative prices to missing
+foreach var of varlist e5 e10 diesel{
+	replace `var'=. if `var'<0
+}
 
 * Replace 0 or missing values with previous prices
 foreach var of varlist e5 e10 diesel {
@@ -296,8 +299,8 @@ rename v8 fuel
 rename v9 price
 
 * Street Type to Dummy
-gen street_type = 0
-replace street_type = 1 if v3 == "A"
+gen highway = 0
+replace highway = 1 if v3 == "A"
 drop v3
 
 * Format date
@@ -329,6 +332,11 @@ replace longitude = longitude/100000
 gen date = dofc(time)
 gen hour = hh(time)
 gen datehour = date*24 + hour
+
+* Negative prices to missing
+foreach var of varlist e5 e10 diesel{
+	replace `var'=. if `var'<0
+}
 
 * Replace 0 or missing values with previous prices
 foreach var of varlist e5 e10 diesel {
@@ -620,8 +628,8 @@ drop if _merge==2
 drop longitude_merge latitude_merge _merge
 
 * Street Type to Dummy
-gen street_type = 0
-replace street_type = 1 if B == "Autobahn"
+gen highway = 0
+replace highway = 1 if B == "Autobahn"
 drop B
 
 
@@ -728,7 +736,7 @@ foreach i in 1 2 5{
 	
 	preserve
 	
-	geonear id latitude longitude using "$source/Competition/competition_using.dta", n(id2 latitude longitude) within(`i') long
+	geonear id latitude longitude using "$source/Competition/competition_using.dta", n(id2 latitude longitude) within(`i') long ignoreself
 	bysort id (id2): egen within`i' = total(km_to_id2 <= `i')	
 	
 	drop id2 km_to_id2
@@ -804,26 +812,18 @@ drop _merge
 * Treat
 generate treat = 1
 replace treat = 0 if country == "France"
+drop country
 
 * Post
 generate post = 1
 replace post = 0 if date < date("01jul2020", "DMY")
 
-* Dif-in-Dif
-generate vat = treat * post 
 
 
+*-----	 						1.3.5 Winsorize							  -----*
 
-*-----	 						1.3.5 Clean Prices							  -----*
+winsor2 e5 e10 diesel, cuts(0.1 99.9) replace
 
-foreach var of varlist e5 e10 diesel{
-	replace `var'=. if `var'<0
-}
-
-foreach var of varlist e5 e10 diesel{
-	replace `var'=. if `var'<0.9
-	replace `var'=. if `var'>2.5
-}
 
 
 *-----	 						1.3.4 Ln Prices							  -----*
@@ -872,8 +872,6 @@ label variable within1 "Petrol Stations within 1km"
 label variable within2 "Petrol Stations within 2km"
 label variable within5 "Petrol Stations within 5km"
 label variable within_postal "Petrol Stations within Postal Code"
-label variable vat "Dif-in-Dif Dummy"
-label variable country "Countries"
 
 
 
@@ -881,12 +879,12 @@ label variable country "Countries"
 label variable treat "Treatment Dummy (1 for Germany)"
 label define treatl 1 "Treatment Group (Germany)" 0 "Control Group (France)"
 label values treat treatl
-label variable post "Post Reform Dummy (1 after 31.12.2021)"
+label variable post "Post Reform Dummy (1 after 31.06.2020)"
 label define postl 1 "Post Reform" 0 "Before Reform"
 label values post postl
-label variable street_type "Type of Attached Street (Highway or Normal Street)"
+label variable highway "Type of Attached Street (Highway or Normal Street)"
 label define stl 1 "Highway" 0 "Normal Street"
-label values street_type stl
+label values highway stl
 label variable comp_within1 "Degree of Competition within 1km"
 label define c1l 1 "High Competition" 0 "Low Competition"
 label values comp_within1 c1l
@@ -922,5 +920,3 @@ drop if todrop == 1
 drop n N todrop
 
 save "$final/00_final_weighted_balanced", replace
-
-
