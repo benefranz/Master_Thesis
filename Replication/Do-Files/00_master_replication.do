@@ -34,7 +34,8 @@ cap log close
 *-------------------------------------------------*
 cap ssc install geonear
 cap ssc install asgen
-
+cap ssc install trimmean
+cap ssc install winsor2
 
 
 *-------------------------------------------------*

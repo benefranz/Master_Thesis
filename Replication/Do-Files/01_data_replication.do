@@ -546,6 +546,9 @@ rename code_postal postal
 rename nom_region sub_region_1
 rename nom_departement sub_region_2
 
+* Drop duplicates
+duplicates drop
+
 * Save
 save "$intermediate/04_france_postal.dta", replace
 
@@ -605,6 +608,9 @@ set obs `=_N+21'
 replace postal = 98739 if _n == _N-20
 replace iso_3166_2_code = "DE-TH" if _n == _N-20
 replace sub_region_1 = "Thuringia" if _n == _N-20
+
+* Drop duplciates
+duplicates drop
 
 * Save
 save "$intermediate/05_germany_postal.dta", replace
@@ -836,7 +842,6 @@ foreach var of varlist e5 e10 diesel{
 
 *-----	 						1.3.6 Setup Panel						  -----*
 
-duplicates drop
 xtset id date
 
 
