@@ -908,11 +908,8 @@ label define cpl 1 "High Competition" 0 "Low Competition"
 label values comp_postal cpl
 
 
-
 * Date Formatting
 format date %tdDD_Mon_CCYY
-
-
 
 * Save
 save "$final/00_final_weighted_unbalanced.dta", replace
