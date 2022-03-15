@@ -34,15 +34,14 @@ cap log close
 *-------------------------------------------------*
 cap ssc install geonear
 cap ssc install asgen
-cap ssc install trimmean
 cap ssc install winsor2
+
 
 
 *-------------------------------------------------*
 *--					Directories					--*
 *-------------------------------------------------*
-
-global main "/Users/benediktfranz/OneDrive - bwedu/Studium/Master/MasterThesis/Empirical Analysis/Replication" // Global to define main location
+global main "/Users/benediktfranz/OneDrive - bwedu/Studium/Master/MasterThesis/Empirical Analysis/Increase" // Global to define main location
 cd "$main"
 global data_in "$main/Data Input"
 global data_out "$main/Data Output"
@@ -57,7 +56,6 @@ cap mkdir "$data_in"
 cap mkdir "$data_out"
 cap mkdir "$source" 
 cap mkdir "$source/Prices_Germany"
-cap mkdir "$source/Prices_Germany/Parallel_Trends"
 cap mkdir "$source/Stations_Germany"
 cap mkdir "$source/Merged_Germany"
 cap mkdir "$source/Mobility"
@@ -70,11 +68,9 @@ cap mkdir "$dofiles"
 
 
 
-
 *-------------------------------------------------*
 *--					Do-Files					--*
 *-------------------------------------------------*
-
-*do "$dofiles/01_data_replication"
-*do "$dofiles/02_analysis_thesis"
-*do "$dofiles/03_graphs_thesis"	
+*do "$dofiles/01_data_extension"
+*do "$dofiles/02_analysis_extension"
+*do "$dofiles/03_graphs_extension"	

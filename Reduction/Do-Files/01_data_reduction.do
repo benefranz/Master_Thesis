@@ -10,11 +10,27 @@
 
 *-----				1.1.1 Tankerkönig Stations (Germany)				  -----*
 
-* June
+* May, July, and August
+foreach mm in 05 07 08{
+	local m : di %02.0f `mm'
+	forvalues ii=01/31{
+		local i : di %02.0f `ii'
+		import delimited "$data_in/Stations/2020-`m'-`i'-stations.csv", varnames(1) encoding("utf-8") clear
+		
+		gen date = date("2020-`m'-`i'", "YMD")
+		rename uuid id
+		rename post_code postal
+		
+		drop openingtimes_json first_active street name brand house_number city
+		
+		save "$source/Stations_Germany/2020-`m'-`i'-stations.dta", replace
+	}
+}
 
-forvalues ii=15/30{
+* June
+forvalues ii=01/30{
 	local i : di %02.0f `ii'
-	import delimited "$data_in/06 Stations/2020-06-`i'-stations.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/Stations/2020-06-`i'-stations.csv", varnames(1) encoding("utf-8") clear
 	
 	gen date = date("2020-06-`i'", "YMD")
 	rename uuid id
@@ -26,28 +42,34 @@ forvalues ii=15/30{
 }
 
 
-* July
-forvalues ii=01/31{
-	local i : di %02.0f `ii'
-	import delimited "$data_in/07 Stations/2020-07-`i'-stations.csv", varnames(1) encoding("utf-8") clear
-	
-	gen date = date("2020-07-`i'", "YMD")
-	rename uuid id
-	rename post_code postal
-	
-	drop openingtimes_json first_active street name brand house_number city
-	
-	save "$source/Stations_Germany/2020-07-`i'-stations.dta", replace
-}
-
-
 
 *-----					1.1.2 Tankerkönig Prices (Germany)				  -----*
 
+* May, July, and August
+foreach mm in 05 07 08{
+	local m : di %02.0f `mm'
+	forvalues ii=01/31{
+		local i : di %02.0f `ii'
+		import delimited "$data_in/Prices/2020-`m'-`i'-prices.csv", varnames(1) encoding("utf-8") clear
+		
+		rename station_uuid id
+		
+		gen double time = clock(date, "YMDhms#")
+		format time %tcDD_Mon_CCYY_HH:MM:SS
+		drop date dieselchange e5change e10change
+
+		gen date = dofc(time)
+		gen hour = hh(time)
+		gen datehour = date*24 + hour
+		
+		save "$source/Prices_Germany/2020-`m'-`i'-prices.dta", replace
+	}
+}
+
 * June
-forvalues ii=15/30{
+forvalues ii=01/30{
 	local i : di %02.0f `ii'	
-	import delimited "$data_in/06 Prices/2020-06-`i'-prices.csv", varnames(1) encoding("utf-8") clear
+	import delimited "$data_in/Prices/2020-06-`i'-prices.csv", varnames(1) encoding("utf-8") clear
 	
 	rename station_uuid id
 	
@@ -62,26 +84,25 @@ forvalues ii=15/30{
 	save "$source/Prices_Germany/2020-06-`i'-prices.dta", replace
 }
 
-* July
-forvalues ii=01/31{
-	local i : di %02.0f `ii'
-	import delimited "$data_in/07 Prices/2020-07-`i'-prices.csv", varnames(1) encoding("utf-8") clear
-	
-	rename station_uuid id
-	
-	gen double time = clock(date, "YMDhms#")
-	format time %tcDD_Mon_CCYY_HH:MM:SS
-	drop date dieselchange e5change e10change
 
-	gen date = dofc(time)
-	gen hour = hh(time)
-	gen datehour = date*24 + hour
-	
-	save "$source/Prices_Germany/2020-07-`i'-prices.dta", replace
+* Merge prices with information stations (May, July, and August)
+foreach mm in 05 07 08{
+	local m : di %02.0f `mm'
+	forvalues ii=01/31{
+		local i : di %02.0f `ii'
+		use "$source/Prices_Germany/2020-`m'-`i'-prices.dta", clear
+		
+		merge m:1 id date using "$source/Stations_Germany/2020-`m'-`i'-stations.dta"
+		
+		keep if _merge == 3
+		drop _merge
+		
+		save "$source/Merged_Germany/2020-`m'-`i'-merged.dta", replace
+	}
 }
 
 * Merge prices with information stations (June)
-forvalues ii=15/30{
+forvalues ii=01/30{
 	local i : di %02.0f `ii'
 	use "$source/Prices_Germany/2020-06-`i'-prices.dta", clear
 	
@@ -93,28 +114,23 @@ forvalues ii=15/30{
 	save "$source/Merged_Germany/2020-06-`i'-merged.dta", replace
 }
 
-* Merge prices with information stations (July)
-forvalues ii=01/31{
-	local i : di %02.0f `ii'
-	use "$source/Prices_Germany/2020-07-`i'-prices.dta", clear
 	
-	merge m:1 id date using "$source/Stations_Germany/2020-07-`i'-stations.dta"
-	
-	keep if _merge == 3
-	drop _merge
-	
-	save "$source/Merged_Germany/2020-07-`i'-merged.dta", replace
-}
-
 * Apend Data
-use "$source/Merged_Germany/2020-06-15-merged.dta", clear
-forvalues mm = 16/30 {
-	local m : di %02.0f `mm'	
-	append using "$source/Merged_Germany/2020-06-`m'-merged.dta"
-}
-forvalues oo = 01/31{ 
+use "$source/Merged_Germany/2020-05-01-merged.dta", clear
+forvalues oo = 02/31{ 
 	local o : di %02.0f `oo'	
-	cap append using "$source/Merged_Germany/2020-07-`o'-merged.dta"
+	cap append using "$source/Merged_Germany/2020-05-`o'-merged.dta"
+}
+forvalues pp = 01/30 {
+	local p : di %02.0f `pp'	
+	append using "$source/Merged_Germany/2020-06-`p'-merged.dta"
+}
+forvalues qq = 07/08{
+	local q : di %02.0f `qq'
+	forvalues rr = 01/31{ 
+		local r : di %02.0f `rr'	
+		cap append using "$source/Merged_Germany/2020-`q'-`r'-merged.dta"
+	}
 }
 
 * Create numeric ID based on non-numeric ID
@@ -125,7 +141,7 @@ rename id_new id
 
 * Negative prices to missing
 foreach var of varlist e5 e10 diesel{
-	replace `var'=. if `var'<0
+	replace `var'=. if `var'<=0
 }
 
 * Replace 0 or missing values with previous prices
@@ -134,14 +150,14 @@ foreach var of varlist e5 e10 diesel {
 }
 
 * Expand data
-bys id (time): gen exp = cond(_n==_N, td(01-08-2020)*24-datehour, datehour[_n+1]-datehour)
+bys id (time): gen exp = cond(_n==_N, td(01-09-2020)*24-datehour, datehour[_n+1]-datehour)
 expand exp
 bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == time[_n-1]
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
 replace date = (datehour - hour) / 24
 
-* Drop 01.08.2020
-drop if date==date("01aug2020", "DMY")
+* Drop 01.09.2020
+drop if date==date("01nov2020", "DMY")
 
 * Reformat time
 replace time = dhms(date, hour, 0, 0)
@@ -312,8 +328,8 @@ drop v6
 drop id_fuel
 drop if fuel == "E85"
 drop if fuel == "GPLc"
-drop if time < clock("2020-06-15 00:00:00", "YMDhms")
-drop if time > clock("2020-07-31 23:59:59", "YMDhms")
+drop if time < clock("2020-05-01 00:00:00", "YMDhms")
+drop if time > clock("2020-08-31 23:59:59", "YMDhms")
 
 * Convert to euros
 replace price = price/1000
@@ -335,7 +351,7 @@ gen datehour = date*24 + hour
 
 * Negative prices to missing
 foreach var of varlist e5 e10 diesel{
-	replace `var'=. if `var'<0
+	replace `var'=. if `var'<=0
 }
 
 * Replace 0 or missing values with previous prices
@@ -344,14 +360,14 @@ foreach var of varlist e5 e10 diesel {
 }
 
 * Expand data
-bys id (time): gen exp = cond(_n==_N, td(01-08-2020)*24-datehour, datehour[_n+1]-datehour)
+bys id (time): gen exp = cond(_n==_N, td(01-09-2020)*24-datehour, datehour[_n+1]-datehour)
 expand exp
 bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == time[_n-1]
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
 replace date = (datehour - hour) / 24
 
 * Drop 01.08.2020
-drop if date==date("01aug2020", "DMY")
+drop if date==date("01nov2020", "DMY")
 
 * Reformat time
 replace time = dhms(date, hour, 0, 0)
@@ -376,6 +392,7 @@ gen country = "France"
 * Correct postal codes
 replace postal = 04200 if postal == 4204
 replace postal = 06510 if postal == 6770
+replace postal = 13014 if postal == 13000
 replace postal = 13290 if postal == 13546
 replace postal = 13400 if postal == 13783
 replace postal = 13290 if postal == 13853
@@ -687,19 +704,6 @@ drop _merge country_region_code country_region metro_area census_fips_code place
 save "$final/02_france.dta", replace
 
 *-----					1.2.6 Append German and French Data				  -----*
-
-/*
-* Hourly
-use "$intermediate/02_france_hourly.dta", clear
-append using "$intermediate/01_prices_germany_hourly.dta"
-
-* Generate log prices
-foreach var of varlist e5 e10 diesel{
-	gen ln_`var' = ln(`var')
-}
-* Save
-save "$final/final_hourly"
-*/
 
 * Daily
 
