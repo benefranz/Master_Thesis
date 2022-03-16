@@ -56,7 +56,7 @@ foreach var of varlist e5 e10 diesel{
 	estadd scalar pt = _b[1.treat#1.post]/(-0.03/1.19)*100
 	
 	* Result output
-	esttab using "$tables/reg_rep_`var'_balanced.tex", /// 
+	esttab using "$tables/reg_red_`var'_balanced.tex", /// 
 	keep(_cons workplace retail_recreation 1.treat#1.post 1.highway#1.treat#1.post 1.comp_within1#1.treat#1.post) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.6fc)) se(par) ci(par)) nonumbers brackets ///
 	stats(pt N r2,labels("Pass-Through (in \%)" "Observations" "R-squared") fmt(%9.2fc %9.0fc %9.4fc)) ///
 	mtitles("Baseline" "Controls" "Highway (+ Controls)" "Competition (+ Controls)") ///
@@ -105,14 +105,14 @@ count if nvals & treat==0 & post==1
 estadd scalar station = r(N)
 
 /*	
-esttab gb ga fb fa using "$tables/sum_rep_overall.tex", replace ///
+esttab gb ga fb fa using "$tables/sum_red_overall.tex", redlace ///
 mtitles("\textbf{\emph{Germany before}}" "\textbf{\emph{Germany after}}" "\textbf{\emph{France before}}" "\textbf{\emph{France after}}") ///
 refcat(e5 "\textbf{\emph{Prices}}" retail_recreation "\textbf{\emph{Mobility}}" within1 "\textbf{\emph{Competition}}", nolabel) ///
 cells("mean(pattern(1 1 0) fmt(2)) sd(pattern(1 1 0)) b(star pattern(0 0 1) fmt(2)) t(pattern(0 0 1) par fmt(2))") ///
 label
 */
 
-esttab gb ga fb fa using "$tables/sum_rep_overall.tex", replace booktabs cell(p(fmt(%6.3f)) & mean(fmt(%6.2f)) sd(fmt(%6.4f) par)) label nostar nonumbers nogap ///
+esttab gb ga fb fa using "$tables/sum_red_overall.tex", replace booktabs cell(p(fmt(%6.3f)) & mean(fmt(%6.2f)) sd(fmt(%6.4f) par)) label nostar nonumbers nogap ///
 mgroups("\textbf{Germany}" "\textbf{France}",  pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) ///
 span erepeat(\cmidrule(lr){@span})) ///
 mtitles("Before" "After" "Before" "After") ///

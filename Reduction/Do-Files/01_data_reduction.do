@@ -633,6 +633,22 @@ duplicates drop
 save "$intermediate/05_germany_postal.dta", replace
 
 
+*-----							 1.1.8 Crude Oil						  -----*
+
+* Load data
+import excel "$data_in/PET_PRI_SPT_S1_D.xls", sheet("Data 1") cellrange(A3:C9263) firstrow clear
+
+* Rename
+rename Date date
+rename EuropeBrentSpotPriceFOBDol oil
+
+* Drop unnecessary observations
+drop CushingOKWTISpotPriceFOB
+drop if date<date("01may2020","DMY")
+drop if date>date("31aug2020","DMY")
+
+* Save
+save "$intermediate/07_crude_oil.dta", replace
 
 *------------------------------------------------------------------------------*
 **#							1.2 Merge and Append							 #**
@@ -711,7 +727,15 @@ save "$final/02_france.dta", replace
 * Daily weighted
 use "$final/02_france.dta", clear
 append using "$final/01_germany.dta"
-	
+
+
+
+*-----						1.2.7 Crude Oil Prices						  -----*
+
+* Merge
+merge m:m date using "$intermediate/07_crude_oil.dta"
+drop _merge
+
 * Save
 save "$final/merged_weighted.dta", replace
 
@@ -844,7 +868,13 @@ foreach var of varlist e5 e10 diesel{
 
 
 
-*-----	 						1.3.6 Setup Panel						  -----*
+*-----					1.3.6 Crude Oil Treat Interaction				  -----*
+
+generate oil_de = oil * treat
+
+
+
+*-----	 						1.3.7 Setup Panel						  -----*
 
 xtset id date
 
@@ -881,6 +911,8 @@ label variable within1 "Petrol Stations within 1km"
 label variable within2 "Petrol Stations within 2km"
 label variable within5 "Petrol Stations within 5km"
 label variable within_postal "Petrol Stations within Postal Code"
+label variable oil "Europe Brent Spot Price FOB (Dollars per Barrel)"
+label variable oil_de "Oil Price x Treatment"
 
 
 
@@ -921,7 +953,7 @@ save "$final/00_final_weighted_unbalanced.dta", replace
 bysort id (date): gen N = _N
 bysort id (date): gen n = _n
 
-bysort id (date): egen todrop = max(n==1 & date>date("15jun2020","DMY"))
+bysort id (date): egen todrop = max(n==1 & date>date("01may2020","DMY"))
 drop if todrop == 1
 drop n N todrop
 
