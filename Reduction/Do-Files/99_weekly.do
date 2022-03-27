@@ -113,13 +113,13 @@ save "$final/00_final_weekly.dta", replace
 use "$final/00_final_weekly.dta", clear
 
 * Add overall coeffcients
-cap drop vat4
-gen vat4 = post*treat
+cap drop vat10
+gen vat10 = post*treat
 foreach var of varlist ln_e5 ln_e10 ln_diesel{
-	quietly areg `var' treat i.week vat4, cluster(id) a(id) 
-	local b_`var'=round(_b[vat4],0.00000001)
+	quietly areg `var' treat i.week vat10, cluster(id) a(id) 
+	local b_`var'=round(_b[vat10],0.00000001)
 	display `b_`var''
-	local se_`var'=round(_se[vat4],0.00000001)
+	local se_`var'=round(_se[vat10],0.00000001)
 	display `se_`var''
 }
 local lln_e5 "E5"
@@ -132,14 +132,14 @@ local ypath `var'
 preserve
 
 * Dummy for weeks
-forvalues i=3143/3150 {
+forvalues i=3137/3154 {
 gen d_`i'=(week==`i')
 gen d_`i'_t=(week==`i' & treat==1)
 }
 *baseline
 drop d_3146 d_3146_t //2020w27 as reference 
 *regression
-areg `var' treat d_31*, cluster(id) a(id) noomitted 
+areg `var' treat d_31* oil_de retail_recreation workplace, cluster(id) a(id) noomitted 
 
 *effects
 gen ball_t=0 if week==3146
@@ -147,13 +147,13 @@ gen upall_t=. if week==3146
 gen lowall_t=. if week==3146
 
 *pre
-forvalues y=3143/3145 {
+forvalues y=3137/3145 {
 replace ball_t=_b[d_`y'] if week==`y' 
 replace upall_t=_b[d_`y']+1.96*_se[d_`y'] if week==`y' 
 replace lowall_t=_b[d_`y']-1.96*_se[d_`y'] if week==`y' 
 }
 *post
-forvalues y=3147/3150 {
+forvalues y=3147/3154 {
 replace ball_t=_b[d_`y'] if week==`y' 
 replace upall_t=_b[d_`y']+1.96*_se[d_`y'] if week==`y' 
 replace lowall_t=_b[d_`y']-1.96*_se[d_`y'] if week==`y' 
@@ -167,20 +167,18 @@ so week
 *Plot 
 twoway  (scatter ball_t week , msize(vsmall) lcolor(navy) mcolor(navy) lpattern(solid) lwidth(medthin)) ///
 (rcap upall_t lowall_t week, lcolor(navy) mcolor(navy) lpattern(solid)), ///
-graphregion(color(white)) bgcolor(white) xtitle("Weeks",height(6)) yline(0, lcolor(black)) yscale(range(-0.03 0.03)) ylabel(-0.03 (0.01) 0.03) ///
-ytitle(Effect on `l`ypath'', height(6)) xline(3146.5, lcolor(red) lpattern(dash)) xlabel(3143(1)3150) ////
+graphregion(color(white)) bgcolor(white) xtitle("Weeks",height(6)) yline(0, lcolor(black)) yscale(range(-0.03 0.03)) ///
+ytitle(Effect on `l`ypath'', height(6)) xline(3146.5, lcolor(red) lpattern(dash)) xlabel(3137(1)3154) ////
 legend(off) ///
 text(0.02 3148.5 "b=`b_`var'' (`se_`var'')", size(medsmall))
 *caption("Treat: Age 50-54;" "Half yearly difference-in-differences coeffcients for the period 2001h2 to 2005h2 using 2002h2 as base." "The vertical bars show 95% confidence intervals based on standard errors clustered at the department and half year level.""Only including regions with Unemployment rate above 12% in last half year.""Balanced sample: Regions Caribe, Pacifica, Bogota D.C.""Y=`ypath'" , size(small) margin(t=3))
-graph export "$graphs/pt_w_`var'.pdf", replace as(pdf)
+// graph export "$graphs/pt_w_`var'.pdf", replace as(pdf)
 
-forvalues y=3143/3145 {
-	test (d_`y'_t=0)
-}
+// forvalues y=3143/3145 {
+// 	test (d_`y'_t=0)
+// }
 
-test (d_3143_t=0) (d_3144_t=0) (d_3145_t=0)
+// test (d_3143_t=0) (d_3144_t=0) (d_3145_t=0)
 
 restore
 }
-
-

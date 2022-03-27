@@ -71,6 +71,6 @@ cap mkdir "$dofiles"
 *-------------------------------------------------*
 *--					Do-Files					--*
 *-------------------------------------------------*
-*do "$dofiles/01_data_extension"
-*do "$dofiles/02_analysis_extension"
-*do "$dofiles/03_graphs_extension"	
+*do "$dofiles/01_data_increase"
+*do "$dofiles/02_analysis_increase"
+*do "$dofiles/03_graphs_increase"	

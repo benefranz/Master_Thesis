@@ -328,7 +328,8 @@ drop v6
 drop id_fuel
 drop if fuel == "E85"
 drop if fuel == "GPLc"
-drop if time < clock("2020-05-01 00:00:00", "YMDhms")
+drop if fuel == "SP98"
+drop if time < clock("2020-04-01 00:00:00", "YMDhms")
 drop if time > clock("2020-08-31 23:59:59", "YMDhms")
 
 * Convert to euros
@@ -366,8 +367,11 @@ bys id (time): replace hour = cond(hour[_n-1]<23, hour[_n-1]+1, 0) if time == ti
 bys id (time): replace datehour = datehour[_n-1] + 1 if time == time[_n-1]
 replace date = (datehour - hour) / 24
 
-* Drop 01.08.2020
-drop if date==date("01nov2020", "DMY")
+* Drop 01.09.2020
+drop if date>=date("01sep2020", "DMY")
+
+* Drop before 01.05.2020
+drop if date<date("01may2020", "DMY")
 
 * Reformat time
 replace time = dhms(date, hour, 0, 0)
@@ -736,6 +740,9 @@ append using "$final/01_germany.dta"
 merge m:m date using "$intermediate/07_crude_oil.dta"
 drop _merge
 
+* Extend oil price for weekends
+bysort id (date): replace oil = oil[_n-1] if oil == 0 | oil == .
+
 * Save
 save "$final/merged_weighted.dta", replace
 
@@ -798,8 +805,13 @@ foreach var of varlist within1 within2 within5{
 	drop `var'_median
 } 
 
+* Generate Quartiles
+foreach var of varlist within1 within2 within5{
+	xtile `var'_quart = `var', nq(4)
+}
+
 * Save 
-save "$intermediate/06_competition_radius.dta", replace 
+save "$intermediate/06_competition_radius.dta", replace
 
 
 
@@ -856,7 +868,7 @@ replace post = 0 if date < date("01jul2020", "DMY")
 
 *-----	 						1.3.5 Winsorize							  -----*
 
-winsor2 e5 e10 diesel, cuts(0.1 99.9) replace
+winsor2 e5 e10 diesel, cuts(0.01 99.99) replace
 
 
 

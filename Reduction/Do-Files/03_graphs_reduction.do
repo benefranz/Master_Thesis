@@ -2,9 +2,8 @@
 *----					3. GRAPHS						-----*
 *------------------------------------------------------------*
 
+* Set Theme
 graph set window fontface "Garamond"
-
-use "$final/00_final_weighted_unbalanced.dta", clear
 
 *------------------------------------------------------------------------------*
 **#								3.1 Parallel Trends						  	 #**
@@ -12,6 +11,10 @@ use "$final/00_final_weighted_unbalanced.dta", clear
 
 *-----				 		3.1.1 Simple Version			 			  -----*
 
+* Load data
+use "$final/00_final_weighted_unbalanced.dta", clear
+
+* Graph
 foreach var of varlist ln_e5 ln_e10 ln_diesel{
 
 	preserve
@@ -38,26 +41,64 @@ foreach var of varlist ln_e5 ln_e10 ln_diesel{
 
 
 *------------------------------------------------------------------------------*
-**#					3.2 Full/Zero Pass-Through Comparison				  	 #**
+**#							3.2 Descriptive Analysis					  	 #**
 *------------------------------------------------------------------------------*
 
+* Load data
+use "$final/00_final_weighted_unbalanced.dta", clear
+
+* Drop unnecessary variables
+keep date e5 e10 diesel treat post
+
+* Collapse daily
 foreach var of varlist e5 e10 diesel{
-	
-	preserve
-	
-	keep `var' treat date
-
-	collapse (mean) `var', by (date treat) 
-
-	twoway  (line `var' date if treat==1 , lcolor(navy) lwidth(medthick)), /// 
-	xline(22097, lcolor(gs8) lpattern(dash)) ///
-	graphregion(color(white)) bgcolor(white) xtitle("Dates", height(6))  ///
-	ytitle("Price € per liter" , height(6))  ///	
-
-	graph export "$graphs/rep_`var'_germany.pdf", replace as(pdf)
-	
-	restore
+	bysort treat date: egen `var'_mean = mean(`var')
+	drop `var'
+	rename `var'_mean `var'
 }
+
+* Drop duplicates
+duplicates drop treat date, force
+
+* Demeaned prices
+foreach var of varlist e5 e10 diesel{
+	quietly: summarize `var' if treat == 1 & post == 0
+	local pre_`var'_ger = r(mean)
+	quietly: summarize `var' if treat == 0 & post == 0
+	local pre_`var'_fra = r(mean)
+	
+	generate demeaned_`var'_ger = `var' - `pre_`var'_ger' if treat == 1
+	generate demeaned_`var'_fra = `var' - `pre_`var'_fra' if treat == 0
+	
+	sort date treat
+	
+	replace demeaned_`var'_ger = demeaned_`var'_ger[_n+1] if demeaned_`var'_ger == .
+	replace demeaned_`var'_fra = demeaned_`var'_fra[_n-1] if demeaned_`var'_fra == .
+}
+
+* Collapse
+keep date demeaned*
+duplicates drop date, force
+
+* Generate descriptive pass-through
+generate pt_e5 = (demeaned_e5_ger - demeaned_e5_fra)/0.03
+generate pt_e10 = (demeaned_e10_ger - demeaned_e10_fra)/0.027
+generate pt_diesel = (demeaned_diesel_ger - demeaned_diesel_fra)/0.027
+
+* Graph	
+graph twoway ///
+(line pt_e5 date) ///
+(line pt_e10 date) ///
+(line pt_diesel date), ///
+ytitle("Share of total tax change") ///
+xtitle("") ///
+yline(-1, lcolor(gs8) lpattern(dash))	///
+xline(22096.5, lcolor(gs8) lpattern(dash)) ///
+graphregion(color(white)) bgcolor(white) ///
+legend(label(1 "E5") label(2 "E10") label(3 "Diesel") rows(1))
+
+* Save
+graph export "$graphs/desc_pt_inc.pdf", replace as(pdf)
 
 
 
@@ -88,9 +129,9 @@ foreach var of varlist e5 e10 diesel{
 	/*lcolor(navy) lwidth(medthick)*/ ///
 	graphregion(color(white)) bgcolor(white) ///
 	ytitle(Kernel Density) ///
-	xtitle("`l`var'' Prices") xlabel(0(0.5)3.5)
+	xtitle("`l`var'' Prices (0.01 Winsorized)") xlabel(0(0.5)3.5)
 	
-	graph export "$graphs/distr_rep_`var'.pdf", replace as(pdf)
+	graph export "$graphs/distr_red_`var'_win.pdf", replace as(pdf)
 }
 
 
@@ -112,30 +153,5 @@ foreach var of varlist within1 within2 within5{
 	graphregion(color(white)) bgcolor(white) ///
 	xtitle("Petrol Stations within `l`var''km")
 
-	graph export "$graphs/distr_comp_rep_`var'.pdf", replace as(pdf)	
+	graph export "$graphs/distr_comp_red_`var'.pdf", replace as(pdf)	
 }
-
-
-
-*-----			 		3.3.2 Price Hourly Boxplots		 			  -----*
-
-use "$intermediate/02_france_hourly.dta", clear
-
-gen hour = hh(time)
-
-sort hour
-
-by hour: egen lo = min(diesel)
-by hour: egen hi = max(diesel)
-by hour: egen me = mean(diesel)
-
-keep hour lo hi me
-duplicates drop
-
-twoway connected me hour, xlab(0(1)24)
-
-
-
-
-
-
