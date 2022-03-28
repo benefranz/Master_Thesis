@@ -82,41 +82,44 @@ eststo clear
 
 * Germany before
 eststo gb: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace highway within1 within2 within5 within_postal if treat == 1 & post == 0
-count if nvals & treat==1 & post==0
-estadd scalar station = r(N)
+e5 e10 diesel oil retail_recreation workplace highway if treat == 1 & post == 0
+quietly count if nvals & treat==1 & post==0
+quietly estadd scalar station = r(N)
+quietly summarize within5 if treat == 1 & post == 0, detail
+quietly estadd scalar within5_med = r(p50)
 
 * Germany after
 eststo ga: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace highway within1 within2 within5 within_postal if treat == 1 & post == 1
-count if nvals & treat==1 & post==1
-estadd scalar station = r(N)
+e5 e10 diesel oil retail_recreation workplace highway if treat == 1 & post == 1
+quietly count if nvals & treat==1 & post==1
+quietly estadd scalar station = r(N)
+quietly summarize within5 if treat == 1 & post == 1, detail
+quietly estadd scalar within5_med = r(p50)
 
 * France before
 eststo fb: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace highway within1 within2 within5 within_postal if treat == 0 & post == 0
-count if nvals & treat==0 & post==0
-estadd scalar station = r(N)
+e5 e10 diesel oil retail_recreation workplace highway if treat == 0 & post == 0
+quietly count if nvals & treat==0 & post==0
+quietly estadd scalar station = r(N)
+quietly summarize within5 if treat == 0 & post == 0, detail
+quietly estadd scalar within5_med = r(p50)
 
 * France after
 eststo fa: quietly estpost summarize ///
-e5 e10 diesel retail_recreation workplace highway within1 within2 within5 within_postal if treat == 0 & post == 1
-count if nvals & treat==0 & post==1
-estadd scalar station = r(N)
+e5 e10 diesel oil retail_recreation workplace highway if treat == 0 & post == 1
+quietly count if nvals & treat==0 & post==1
+quietly estadd scalar station = r(N)
+quietly summarize within5 if treat == 0 & post == 1, detail
+quietly estadd scalar within5_med = r(p50)
 
-/*	
-esttab gb ga fb fa using "$tables/sum_red_overall.tex", redlace ///
-mtitles("\textbf{\emph{Germany before}}" "\textbf{\emph{Germany after}}" "\textbf{\emph{France before}}" "\textbf{\emph{France after}}") ///
-refcat(e5 "\textbf{\emph{Prices}}" retail_recreation "\textbf{\emph{Mobility}}" within1 "\textbf{\emph{Competition}}", nolabel) ///
-cells("mean(pattern(1 1 0) fmt(2)) sd(pattern(1 1 0)) b(star pattern(0 0 1) fmt(2)) t(pattern(0 0 1) par fmt(2))") ///
-label
-*/
-
-esttab gb ga fb fa using "$tables/sum_red_overall.tex", replace booktabs cell(p(fmt(%6.3f)) & mean(fmt(%6.2f)) sd(fmt(%6.4f) par)) label nostar nonumbers nogap ///
+* Create latex table
+esttab gb ga fb fa using "$tables/sum_red_overall.tex", replace ///
+booktabs cell(p(fmt(%6.3f)) & mean(fmt(%6.2f)) sd(fmt(%6.4f) par)) ///
+label nostar nonumbers nogap ///
 mgroups("\textbf{Germany}" "\textbf{France}",  pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) ///
 span erepeat(\cmidrule(lr){@span})) ///
 mtitles("Before" "After" "Before" "After") ///
-stats(station N,labels("Stations" "Observations") fmt(%9.0fc)) ///
+stats(station within5_med N,labels("Stations" "Median Stations within 5km" "Observations") fmt(%9.0fc)) ///
 collabels(none)
 
 * Drop
