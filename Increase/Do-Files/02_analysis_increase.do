@@ -13,7 +13,7 @@
 * Load data
 use "$final/00_final_weighted_unbalanced.dta", clear
 
-* Drop 15.12.2020 to 31.12.2020
+* Drop 16.12.2020 to 31.12.2020
 drop if date>date("15dec2020","DMY") & date<=date("31dec2020","DMY")
 
 foreach var of varlist e5 e10 diesel{
@@ -47,7 +47,7 @@ foreach var of varlist e5 e10 diesel{
 * Load data
 use "$final/00_final_weighted_balanced.dta", clear
 
-* Drop 15.12.2020 to 31.12.2020
+* Drop 16.12.2020 to 31.12.2020
 drop if date>date("15dec2020","DMY") & date<=date("31dec2020","DMY")
 
 foreach var of varlist e5 e10 diesel{
@@ -81,6 +81,9 @@ foreach var of varlist e5 e10 diesel{
 
 * Load data
 use "$final/00_final_weighted_unbalanced.dta", clear
+
+* Drop 16.12.2020 to 31.12.2020
+drop if date>date("15dec2020","DMY") & date<=date("31dec2020","DMY")
 
 * Create variable to count stations
 by post id, sort: gen nvals = _n == 1
