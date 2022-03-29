@@ -639,6 +639,9 @@ save "$intermediate/05_germany_postal.dta", replace
 
 *-----							 1.1.8 Crude Oil						  -----*
 
+* Tempfile
+tempfile a b
+
 * Load data
 import excel "$data_in/PET_PRI_SPT_S1_D.xls", sheet("Data 1") cellrange(A3:C9263) firstrow clear
 
@@ -650,6 +653,26 @@ rename EuropeBrentSpotPriceFOBDol oil
 drop CushingOKWTISpotPriceFOB
 drop if date<date("01may2020","DMY")
 drop if date>date("31aug2020","DMY")
+
+* Add weekends
+sort date
+save `a'
+
+sum date, meanonly
+local min = r(min)
+local days = r(max) - r(min) + 1
+
+drop _all
+set obs `days'
+gen date = _n + `min' - 1
+sort date
+save `b'
+
+merge date using `a'
+drop _merge
+format date %td
+
+replace oil = oil[_n-1] if oil == .
 
 * Save
 save "$intermediate/07_crude_oil.dta", replace
@@ -901,7 +924,6 @@ rename retail_and_recreation_percent_ch retail_recreation
 rename workplaces_percent_change_from_b workplace
 
 
-
 * Regular Labels
 label variable id "Petrol Station ID"
 label variable date "Date"
@@ -914,8 +936,8 @@ label variable e10 "E10 Price"
 label variable ln_diesel "Log Diesel Price"
 label variable ln_e5 "Log E5 Price"
 label variable ln_e10 "Log E10 Price"
-label variable retail_recreation "Change in Retail and Recreation Mobility"
-label variable workplace "Change in Workplace Mobility"
+label variable retail_recreation "Retail and Recreation Mobility"
+label variable workplace "Workplace Mobility"
 label variable sub_region_1 "Bundesländer/Départements"
 label variable sub_region_2 "French Regions"
 label variable iso_3166_2_code "ISO 3166-2 Code"
@@ -923,37 +945,38 @@ label variable within1 "Petrol Stations within 1km"
 label variable within2 "Petrol Stations within 2km"
 label variable within5 "Petrol Stations within 5km"
 label variable within_postal "Petrol Stations within Postal Code"
-label variable oil "Europe Brent Spot Price FOB (Dollars per Barrel)"
+label variable oil "Crude Oil Price (Dollars per Barrel)"
 label variable oil_de "Oil Price x Treatment"
-
 
 
 * Labels with Value Label
 label variable treat "Treatment Dummy (1 for Germany)"
-label define treatl 1 "Treatment Group (Germany)" 0 "Control Group (France)"
+cap label define treatl 1 "Treatment Group (Germany)" 0 "Control Group (France)"
 label values treat treatl
-label variable post "Post Reform Dummy (1 after 31.06.2020)"
-label define postl 1 "Post Reform" 0 "Before Reform"
+label variable post "Post Reform Dummy (1 after 31.12.2020)"
+cap label define postl 1 "Post Reform" 0 "Before Reform"
 label values post postl
-label variable highway "Type of Attached Street (Highway or Normal Street)"
-label define stl 1 "Highway" 0 "Normal Street"
+label variable highway "Highway"
+cap label define stl 1 "Highway" 0 "Normal Street"
 label values highway stl
 label variable comp_within1 "Degree of Competition within 1km"
-label define c1l 1 "High Competition" 0 "Low Competition"
+cap label define c1l 1 "High Competition" 0 "Low Competition"
 label values comp_within1 c1l
 label variable comp_within2 "Degree of Competition within 2km"
-label define c2l 1 "High Competition" 0 "Low Competition"
+cap label define c2l 1 "High Competition" 0 "Low Competition"
 label values comp_within2 c2l
 label variable comp_within5 "Degree of Competition within 5km"
-label define c5l 1 "High Competition" 0 "Low Competition"
+cap label define c5l 1 "High Competition" 0 "Low Competition"
 label values comp_within1 c5l
 label variable comp_postal "Degree of Competition within 5km"
-label define cpl 1 "High Competition" 0 "Low Competition"
+cap label define cpl 1 "High Competition" 0 "Low Competition"
 label values comp_postal cpl
 
 
 * Date Formatting
 format date %tdDD_Mon_CCYY
+
+
 
 * Save
 save "$final/00_final_weighted_unbalanced.dta", replace
