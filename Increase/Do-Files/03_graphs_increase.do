@@ -112,12 +112,12 @@ foreach var of varlist e5 e10 diesel{
 	drop `var'
 	rename `var'_mean `var'
 }
-
+/*
 * Generate oil mean
 egen oil_mean = mean(oil), by(week)
 drop oil
 rename oil_mean oil
-
+*/
 * Drop unnecessary variable
 drop date
 
@@ -132,7 +132,7 @@ foreach var of varlist e5 e10 diesel{
 	gen ln_`var' = ln(`var')
 }
 
-* Graph without oil interaction
+* Graph
 eststo clear
 eststo e5: quietly areg ln_e5 ib6.week##c.treat, a(id) cluster(id)
 eststo e10: quietly areg ln_e10 ib6.week##c.treat, a(id) cluster(id)
@@ -152,28 +152,6 @@ graphregion(color(white)) bgcolor(white) ///
 legend(label(2 "E5") label(4 "E10") label(6 "Diesel") rows(1) size(small))
 
 graph export "$graphs/reg_pt_inc.pdf", replace as(pdf)
-
-
-* Graph with oil interaction
-eststo clear
-eststo e5: areg ln_e5 i.treat##c.oil ib6.week##c.treat, a(id) cluster(id)
-eststo e10: areg ln_e10 i.treat##c.oil ib6.week##c.treat, a(id) cluster(id)
-eststo diesel: areg ln_diesel i.treat##c.oil ib6.week##c.treat, a(id) cluster(id)
-
-coefplot ///
-(e5, color("255 165 77") msize(small) ciopts(lcolor("255 165 77"))) ///
-(e10, color("5 174 185") msize(small) ciopts(lcolor("5 174 185"))) ///
-(diesel, color("0 66 108") msize(small) ciopts(lcolor("0 66 108"))), ///
-keep(*week#*) recast(connected) base omitted vertical nooffsets ///
-xline(6.5, lcolor(gs8)) ///
-yline(0, lcolor(gs8)) ///
-xlabel(1 "1-8 Nov" 2 "9-15 Nov" 3 "16-23 Nov" 4 "24-30 Nov" 5 "1-8 Dec" 6 "9-15 Dec" 7 "1-8 Jan" 8 "9-15 Jan" 9 "16-23 Jan" 10 "24-31 Jan" 11 "1-7 Feb" 12 "8-14 Feb" 13 "15-21 Feb" 14 "22-28 Feb", angle(vertical) labsize(vsmall)) ///
-ytitle("Price Changes in Log", size(small)) ///
-ylabel(, labsize(vsmall)) ///
-graphregion(color(white)) bgcolor(white) ///
-legend(label(2 "E5") label(4 "E10") label(6 "Diesel") rows(1) size(small))
-
-graph export "$graphs/reg_pt_oil_inc.pdf", replace as(pdf)
 
 
 

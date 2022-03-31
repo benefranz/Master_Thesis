@@ -104,16 +104,11 @@ replace week = 16 if date>=date("22aug2020","DMY") & date<=date("31aug2020","DMY
 
 
 * Generate weekly means
-foreach var of varlist e5 e10 diesel{
+foreach var of varlist e5 e10 diesel oil{
 	bysort id week: egen `var'_mean = mean(`var')
 	drop `var'
 	rename `var'_mean `var'
 }
-
-* Generate oil mean
-egen oil_mean = mean(oil), by(week)
-drop oil
-rename oil_mean oil
 
 * Drop unnecessary variable
 drop date
