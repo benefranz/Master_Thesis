@@ -1,0 +1,22 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{6}{c}}
+\toprule
+                    &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}&\multicolumn{1}{c}{(5)}&\multicolumn{1}{c}{(6)}\\
+                    &\multicolumn{1}{c}{E5}&\multicolumn{1}{c}{E10}&\multicolumn{1}{c}{Diesel}&\multicolumn{1}{c}{E5}&\multicolumn{1}{c}{E10}&\multicolumn{1}{c}{Diesel}\\
+\midrule
+Treatment Group $\times$ Post&     0.00302\sym{***}&    -0.00221\sym{***}&    -0.02009\sym{***}&     0.00218\sym{***}&    -0.00268\sym{***}&    -0.01981\sym{***}\\
+                    &   (0.00029)         &   (0.00024)         &   (0.00020)         &   (0.00029)         &   (0.00024)         &   (0.00020)         \\
+Retail and Recreation&                     &                     &                     &    -0.00004\sym{***}&    -0.00003\sym{***}&     0.00001\sym{***}\\
+                    &                     &                     &                     &   (0.00001)         &   (0.00000)         &   (0.00000)         \\
+Workplace           &                     &                     &                     &    -0.00003\sym{***}&    -0.00005\sym{***}&    -0.00008\sym{***}\\
+                    &                     &                     &                     &   (0.00001)         &   (0.00000)         &   (0.00000)         \\
+Constant            &     0.16013\sym{***}&     0.14444\sym{***}&     0.08237\sym{***}&     0.15333\sym{***}&     0.13775\sym{***}&     0.07624\sym{***}\\
+                    &   (0.00020)         &   (0.00019)         &   (0.00017)         &   (0.00050)         &   (0.00042)         &   (0.00037)         \\
+\midrule
+Pass-Through (in \%)&      -11.97         &        8.76         &       79.70         &       -8.65         &       10.64         &       78.59         \\
+Observations        &   2,334,014         &   2,519,857         &   2,975,053         &   2,325,128         &   2,512,480         &   2,960,912         \\
+R-squared           &      0.9132         &      0.9250         &      0.9659         &      0.9124         &      0.9248         &      0.9657         \\
+\bottomrule
+\end{tabular}
+}

@@ -16,6 +16,65 @@ use "$final/00_final_weighted_unbalanced.dta", clear
 * Drop 16.12.2020 to 31.12.2020
 drop if date>date("15dec2020","DMY") & date<=date("31dec2020","DMY")
 
+
+* Baseline regressions
+eststo clear
+foreach var of varlist e5 e10 diesel{
+	local fpt_e5 = 0.0815
+	local fpt_e10 = 0.0837
+	local fpt_diesel = 0.0966 
+	
+	eststo baseline`var': quietly areg ln_`var' i.date 1.treat#1.post, cluster(id) a(id)
+	estadd scalar pt = _b[1.treat#1.post]/(`fpt_`var'')*100
+}
+foreach var of varlist e5 e10 diesel{
+	local fpt_e5 = 0.0815
+	local fpt_e10 = 0.0837
+	local fpt_diesel = 0.0966 
+
+	eststo controls_`var': quietly areg ln_`var' i.date 1.treat#1.post retail_recreation workplace, cluster(id) a(id)
+	estadd scalar pt = _b[1.treat#1.post]/(`fpt_`var'')*100
+}
+
+esttab using "$tables/reg_inc_unbalanced.tex", /// 
+keep(_cons workplace retail_recreation 1.treat#1.post) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%6.5fc)) se(par)) brackets ///
+stats(pt N r2,labels("Pass-Through (in \%)" "Observations" "R-squared") fmt(%9.2fc %9.0fc %9.4fc)) ///
+mtitles("E5" "E10" "Diesel" "E5" "E10" "Diesel") ///
+label booktabs replace nogap collabels(none) nonotes
+
+
+* Additional regressions
+eststo clear
+foreach var of varlist e5 e10 diesel{
+	local fpt_e5 = 0.0815
+	local fpt_e10 = 0.0837
+	local fpt_diesel = 0.0966 
+	
+	eststo highway_`var': quietly areg ln_`var' i.date i.highway##i.treat##i.post retail_recreation workplace, absorb(id) cluster(id)
+	estadd scalar pt = _b[1.treat#1.post]/(`fpt_`var'')*100
+	estadd scalar pt_h = (_b[1.treat#1.post] + _b[1.highway#1.treat#1.post])/(`fpt_`var'')*100
+}
+foreach var of varlist e5 e10 diesel{
+	local fpt_e5 = 0.0815
+	local fpt_e10 = 0.0837
+	local fpt_diesel = 0.0966 
+	
+	eststo comp_`var': quietly areg ln_`var' i.date i.within5_quart##i.treat##i.post retail_recreation workplace, absorb(id) cluster(id)
+	estadd scalar pt = _b[1.treat#1.post]/(`fpt_`var'')*100
+	estadd scalar pt_c2 = (_b[1.treat#1.post] + _b[2.within5_quart#1.treat#1.post])/(`fpt_`var'')*100
+	estadd scalar pt_c3 = (_b[1.treat#1.post] + _b[3.within5_quart#1.treat#1.post])/(`fpt_`var'')*100
+	estadd scalar pt_c4 = (_b[1.treat#1.post] + _b[4.within5_quart#1.treat#1.post])/(`fpt_`var'')*100
+}
+
+esttab using "$tables/reg_inc_add_unbalanced.tex", /// 
+keep(_cons workplace retail_recreation 1.treat#1.post 1.highway#1.treat#1.post 2.within5_quart#1.treat#1.post 3.within5_quart#1.treat#1.post 4.within5_quart#1.treat#1.post) star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%6.5fc)) se(par)) brackets ///
+stats(pt pt_h pt_c2 pt_c3 pt_c4 N r2,labels("Pass-Through (in \%)" "Pass-Through Highway (in \%)" "Pass-Through Comp. 2nd" "Pass-Through Comp. 3nd" "Pass-Through Comp. 4nd" "Observations" "R-squared") fmt(%9.2fc %9.2fc %9.2fc %9.2fc %9.2fc %9.0fc %9.4fc)) ///
+mtitles("E5" "E10" "Diesel" "E5" "E10" "Diesel") ///
+label booktabs replace nogap collabels(none) nonotes
+
+
+
+/*
 foreach var of varlist e5 e10 diesel{
 
 	* Regressions and pass-through calculations
@@ -39,8 +98,7 @@ foreach var of varlist e5 e10 diesel{
 	mtitles("Baseline" "Controls" "Highway (+ Controls)" "Competition (+ Controls)") ///
 	label booktabs replace nogap collabels(none) nonotes
 }
-
-
+*/
 
 *-----							2.1.2 Balanced							  -----*
 

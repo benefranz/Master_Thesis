@@ -3,8 +3,8 @@
 ************************************************************************
 
 * Project: 
-* Creator: Benedikt Franz, bfranz@mail.uni-mannheim.de, 07.10.2021
-* Last data update: 07.10.2021
+* Creator: Benedikt Franz, bfranz@mail.uni-mannheim.de, 21.12.2021
+* Last data update: 05.04.2022
 
 /* Data In: 
 	1. Tankerkönig Preise
@@ -36,6 +36,7 @@ cap ssc install geonear
 cap ssc install asgen
 cap ssc install trimmean
 cap ssc install winsor2
+cap ssc install egenmore
 
 
 *-------------------------------------------------*

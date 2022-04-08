@@ -80,7 +80,7 @@ graph export "$graphs/desc_pt_inc.pdf", replace as(pdf)
 use "$final/00_final_weighted_unbalanced.dta", clear
 
 * Drop unnecessary variables
-keep date e5 e10 diesel treat post oil id
+keep date e5 e10 diesel treat post id
 
 * Drop 16.12.2020 to 31.12.2020
 drop if date>date("15dec2020","DMY") & date<=date("31dec2020","DMY")
@@ -112,12 +112,7 @@ foreach var of varlist e5 e10 diesel{
 	drop `var'
 	rename `var'_mean `var'
 }
-/*
-* Generate oil mean
-egen oil_mean = mean(oil), by(week)
-drop oil
-rename oil_mean oil
-*/
+
 * Drop unnecessary variable
 drop date
 

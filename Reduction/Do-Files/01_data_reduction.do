@@ -794,7 +794,7 @@ rename id id2
 save "$source/Competition/competition_using.dta", replace
 
 * Distance evaluation 
-foreach i in 1 2 5{
+foreach i in 5 10{
 	
 	use "$source/Competition/competition_main.dta", clear
 	
@@ -813,24 +813,16 @@ foreach i in 1 2 5{
 }
 
 * Merge
-use "$source/Competition/competition_radius_1.dta", clear
+use "$source/Competition/competition_radius_5.dta", clear
+merge 1:1 id using "$source/Competition/competition_radius_10.dta"
+drop _merge
 
-foreach i in 2 5{
-	merge 1:1 id using "$source/Competition/competition_radius_`i'.dta"
-	drop _merge
-}
-
-* Generate medians
-foreach var of varlist within1 within2 within5{
-	egen `var'_median = median(`var')
-	generate comp_`var' = 0
-	replace comp_`var' = 1 if `var' > `var'_median
-	drop `var'_median
-} 
+merge 1:1 id using "$source/Competition/competition_main.dta", keepusing(country)
+drop _merge
 
 * Generate Quartiles
-foreach var of varlist within1 within2 within5{
-	xtile `var'_quart = `var', nq(4)
+foreach var of varlist within5 within10{
+	egen `var'_quart = xtile(`var'), n(4) by(country)
 }
 
 * Save 
@@ -891,7 +883,7 @@ replace post = 0 if date < date("01jul2020", "DMY")
 
 *-----	 						1.3.5 Winsorize							  -----*
 
-winsor2 e5 e10 diesel, cuts(0.01 99.99) replace
+winsor2 e5 e10 diesel, cuts(0.01 99.99) by(treat) replace
 
 
 
@@ -911,6 +903,7 @@ generate oil_de = oil * treat
 
 *-----	 						1.3.7 Setup Panel						  -----*
 
+sort id date
 xtset id date
 
 
@@ -936,38 +929,30 @@ label variable e10 "E10 Price"
 label variable ln_diesel "Log Diesel Price"
 label variable ln_e5 "Log E5 Price"
 label variable ln_e10 "Log E10 Price"
-label variable retail_recreation "Retail and Recreation Mobility"
-label variable workplace "Workplace Mobility"
+label variable retail_recreation "Retail and Recreation"
+label variable workplace "Workplace"
 label variable sub_region_1 "Bundesländer/Départements"
 label variable sub_region_2 "French Regions"
 label variable iso_3166_2_code "ISO 3166-2 Code"
-label variable within1 "Petrol Stations within 1km"
-label variable within2 "Petrol Stations within 2km"
 label variable within5 "Petrol Stations within 5km"
+label variable within10 "Petrol Stations within 10km"
+label variable within5_quart "Quart. Comp. 5km"
+label variable within10_quart "Quart. Comp. 10km"
 label variable within_postal "Petrol Stations within Postal Code"
 label variable oil "Crude Oil Price (Dollars per Barrel)"
-label variable oil_de "Oil Price x Treatment"
+label variable oil_de "Oil x Treat"
 
 
 * Labels with Value Label
 label variable treat "Treatment Dummy (1 for Germany)"
-cap label define treatl 1 "Treatment Group (Germany)" 0 "Control Group (France)"
+cap label define treatl 1 "Treatment Group" 0 "Control Group"
 label values treat treatl
-label variable post "Post Reform Dummy (1 after 31.12.2020)"
-cap label define postl 1 "Post Reform" 0 "Before Reform"
+label variable post "Post Reform Dummy (1 starting from 01.07.2020)"
+cap label define postl 1 "Post" 0 "Pre"
 label values post postl
 label variable highway "Highway"
 cap label define stl 1 "Highway" 0 "Normal Street"
 label values highway stl
-label variable comp_within1 "Degree of Competition within 1km"
-cap label define c1l 1 "High Competition" 0 "Low Competition"
-label values comp_within1 c1l
-label variable comp_within2 "Degree of Competition within 2km"
-cap label define c2l 1 "High Competition" 0 "Low Competition"
-label values comp_within2 c2l
-label variable comp_within5 "Degree of Competition within 5km"
-cap label define c5l 1 "High Competition" 0 "Low Competition"
-label values comp_within1 c5l
 label variable comp_postal "Degree of Competition within 5km"
 cap label define cpl 1 "High Competition" 0 "Low Competition"
 label values comp_postal cpl
